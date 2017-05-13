@@ -1,22 +1,20 @@
 package acronym
 
 import (
+	"regexp"
 	"strings"
-	"unicode"
 )
 
 const testVersion = 2
 
 // Abbreviate converts an input string into the representative acronym
 func Abbreviate(value string) (acronym string) {
-	isDelimiter := func(c rune) bool {
-		return !unicode.IsLetter(c)
-	}
+	re := regexp.MustCompile("(\\b[A-Za-z])|([a-z][A-Z])")
 
-	words := strings.FieldsFunc(value, isDelimiter)
+	matches := re.FindAllString(value, -1)
 
-	for _, word := range words {
-		acronym += strings.ToUpper(word[0:1])
+	for _, match := range matches {
+		acronym += strings.ToUpper(match[len(match)-1:])
 	}
 
 	return
