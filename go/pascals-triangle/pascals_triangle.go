@@ -4,6 +4,10 @@ const testVersion = 1
 
 // Triangle calculates Pascal's triangle given a size
 func Triangle(size int) [][]int {
+	if size == 0 {
+		return [][]int{}
+	}
+
 	if size == 1 {
 		return [][]int{{1}}
 	}
