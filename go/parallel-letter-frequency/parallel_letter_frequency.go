@@ -12,7 +12,7 @@ func ConcurrentFrequency(inputs []string) FreqMap {
 
 	result := make(FreqMap)
 
-	for _ = range inputs {
+	for range inputs {
 		for r, count := range <-c {
 			result[r] += count
 		}
