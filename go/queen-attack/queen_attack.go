@@ -1,36 +1,64 @@
 package queenattack
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 const testVersion = 2
 
+// Position represents a position on a chess board
+type Position struct {
+	file int
+	rank int
+}
+
 // CanQueenAttack determines whether or not two queens are positioned so that they can attack each other
-func CanQueenAttack(whitePosition, blackPosition string) (bool, error) {
+func CanQueenAttack(white, black string) (attack bool, e error) {
+	defer func() {
+		if r := recover(); r != nil {
+			e = errors.New(fmt.Sprint(r))
+		}
+	}()
+
+	whitePosition := getPosition(white)
+	blackPosition := getPosition(black)
+
 	if whitePosition == blackPosition {
-		return false, errors.New("Both queens cannot occupy the same position")
+		e = errors.New("queens cannot occupy the same position")
 	}
 
-	whiteFile, whiteRank, err := parsePosition(whitePosition)
+	attack = isMatchingFile(whitePosition, blackPosition) ||
+		isMatchingRank(whitePosition, blackPosition) ||
+		isMatchingDiagonal(whitePosition, blackPosition)
 
-	if err != nil {
-		return false, err
+	return
+}
+
+func getPosition(square string) Position {
+	position := Position{file: int(square[0] - 'a'), rank: int(square[1] - '1')}
+
+	if !position.isValid() {
+		panic(fmt.Sprintf("invalid position - %q", square))
 	}
 
-	blackFile, blackRank, err := parsePosition(blackPosition)
+	return position
+}
 
-	if err != nil {
-		return false, err
-	}
+func (position Position) isValid() bool {
+	return position.file >= 0 && position.file <= 7 && position.rank >= 0 && position.rank <= 7
+}
 
-	if blackFile == whiteFile || blackRank == whiteRank {
-		return true, nil
-	}
+func isMatchingFile(p1, p2 Position) bool {
+	return p1.file == p2.file
+}
 
-	if abs(blackFile-whiteFile) == abs(blackRank-whiteRank) {
-		return true, nil
-	}
+func isMatchingRank(p1, p2 Position) bool {
+	return p1.rank == p2.rank
+}
 
-	return false, nil
+func isMatchingDiagonal(p1, p2 Position) bool {
+	return abs(p1.file-p2.file) == abs(p1.rank-p2.rank)
 }
 
 func abs(n int) int {
@@ -39,16 +67,4 @@ func abs(n int) int {
 	}
 
 	return n
-}
-
-func parsePosition(position string) (file int, rank int, err error) {
-	if file = int(position[0] - 'a'); file < 0 || file > 7 {
-		err = errors.New("Invalid position %q - rank should be from a to h")
-	}
-
-	if rank = int(position[1] - '1'); rank < 0 || rank > 7 {
-		err = errors.New("Invalid position %q - file should be from 1 to 8")
-	}
-
-	return
 }
