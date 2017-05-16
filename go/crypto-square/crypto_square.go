@@ -11,7 +11,7 @@ const testVersion = 2
 // Encode uses the classic square code method to encrypt a message.
 func Encode(text string) string {
 	normalize := func(r rune) rune {
-		if !unicode.IsLetter(r) && !unicode.IsDigit(r) {
+		if !unicode.In(r, unicode.Letter, unicode.Number) {
 			return -1
 		}
 		return unicode.ToLower(r)
