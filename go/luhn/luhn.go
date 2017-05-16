@@ -24,7 +24,7 @@ func Valid(number string) bool {
 
 		digit := int(r - '0')
 		if i%2 == 1 {
-			digit = digit * 2
+			digit *= 2
 			if digit > 9 {
 				digit -= 9
 			}
