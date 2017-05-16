@@ -8,7 +8,7 @@ const testVersion = 1
 type Account struct {
 	balance int64
 	closed  bool
-	mutex   sync.Mutex
+	mutex   sync.RWMutex
 }
 
 // Open creates a new account with the specified opening balance.
@@ -23,8 +23,8 @@ func Open(openingBalance int64) *Account {
 
 // Balance returns the current account balance.
 func (account *Account) Balance() (int64, bool) {
-	account.mutex.Lock()
-	defer account.mutex.Unlock()
+	account.mutex.RLock()
+	defer account.mutex.RUnlock()
 
 	if account.closed {
 		return 0, false
