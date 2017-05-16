@@ -23,8 +23,8 @@ func Open(openingBalance int64) *Account {
 
 // Balance returns the current account balance.
 func (account *Account) Balance() (int64, bool) {
-	defer func() { account.mutex.Unlock() }()
 	account.mutex.Lock()
+	defer account.mutex.Unlock()
 
 	if account.closed {
 		return 0, false
@@ -35,8 +35,8 @@ func (account *Account) Balance() (int64, bool) {
 // Deposit deposits the specified amount into the account and returns the updated balance.
 // Specifying a negative amount will withdraw funds instead.
 func (account *Account) Deposit(amount int64) (int64, bool) {
-	defer func() { account.mutex.Unlock() }()
 	account.mutex.Lock()
+	defer account.mutex.Unlock()
 
 	if account.closed {
 		return 0, false
@@ -50,8 +50,8 @@ func (account *Account) Deposit(amount int64) (int64, bool) {
 
 // Close closes the account and returns the closing balance.
 func (account *Account) Close() (int64, bool) {
-	defer func() { account.mutex.Unlock() }()
 	account.mutex.Lock()
+	defer account.mutex.Unlock()
 
 	if account.closed {
 		return 0, false
