@@ -2,33 +2,20 @@ package protein
 
 const testVersion = 1
 
-type polypeptideTranslation struct {
-	codons      []string
-	polypeptide string
-}
-
-var polypeptideTranslations = []polypeptideTranslation{
-	{[]string{"AUG"}, "Methionine"},
-	{[]string{"UUU", "UUC"}, "Phenylalanine"},
-	{[]string{"UUA", "UUG"}, "Leucine"},
-	{[]string{"UCU", "UCC", "UCA", "UCG"}, "Serine"},
-	{[]string{"UAU", "UAC"}, "Tyrosine"},
-	{[]string{"UGU", "UGC"}, "Cysteine"},
-	{[]string{"UGG"}, "Tryptophan"},
-	{[]string{"UAA", "UAG", "UGA"}, "STOP"},
+var polypeptideTranslations = map[string]string{
+	"AUG": "Methionine",
+	"UUU": "Phenylalanine", "UUC": "Phenylalanine",
+	"UUA": "Leucine", "UUG": "Leucine",
+	"UCU": "Serine", "UCC": "Serine", "UCA": "Serine", "UCG": "Serine",
+	"UAU": "Tyrosine", "UAC": "Tyrosine",
+	"UGU": "Cysteine", "UGC": "Cysteine",
+	"UGG": "Tryptophan",
+	"UAA": "STOP", "UAG": "STOP", "UGA": "STOP",
 }
 
 // FromCodon converts a codon to a polypeptide.
 func FromCodon(sequence string) string {
-	for _, t := range polypeptideTranslations {
-		for _, codon := range t.codons {
-			if sequence == codon {
-				return t.polypeptide
-			}
-		}
-	}
-
-	return ""
+	return polypeptideTranslations[sequence]
 }
 
 // FromRNA translates an RNA sequence into a protein.
