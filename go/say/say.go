@@ -8,24 +8,40 @@ import (
 
 const testVersion = 1
 
-var numbers = [][]string{
-	{"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"},
-	{"ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"},
-	{"twenty"},
-	{"thirty"},
-	{"forty"},
-	{"fifty"},
-	{"sixty"},
-	{"seventy"},
-	{"eighty"},
-	{"ninety"},
-}
+const zero = "zero"
 
-// var powers = []string{"one", "ten", "hundred", "thousand", "million", "billion"}
+var ones = []string{
+	"", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+}
+var teens = []string{
+	"", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen",
+}
+var tens = []string{
+	"", "ten", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety",
+}
+var scales = []string{
+	"", "thousand", "million", "billion", "trillion", "quadrillion", "quintillion",
+}
 
 // Say converts a number to text.
 func Say(number uint64) string {
-	text := spell(number)
+	var text string
+	var chunks []string
+
+	if number == 0 {
+		text = zero
+	} else {
+		for i := 0; number > 0 || i == 0; i++ {
+			count := number % 1000
+			if count > 0 {
+				chunks = append([]string{scales[i]}, chunks...)
+				chunks = append([]string{spell(count)}, chunks...)
+			}
+			number /= 1000
+		}
+
+		text = strings.TrimSpace(strings.Join(chunks, " "))
+	}
 
 	exec.Command("say", text).Run()
 
@@ -35,22 +51,26 @@ func Say(number uint64) string {
 func spell(number uint64) string {
 	var values []string
 
-	hundreds := number / 100
-	tens := number % 100 / 10
-	ones := number % 10
+	h := number / 100
+	t := number % 100 / 10
+	o := number % 10
 
-	if hundreds > 0 {
-		values = append(values, numbers[0][hundreds], "hundred")
+	if h > 0 {
+		values = append(values, ones[h], "hundred")
 	}
 
-	if ones < uint64(len(numbers[tens])) {
-		if ones > 0 || tens > 0 || number == 0 {
-			values = append(values, numbers[tens][ones])
+	if t > 1 {
+		if o > 0 {
+			values = append(values, fmt.Sprintf("%s-%s", tens[t], ones[o]))
+		} else if t > 0 {
+			values = append(values, tens[t])
 		}
-	} else if tens > 0 {
-		values = append(values, fmt.Sprintf("%s-%s", numbers[tens][0], numbers[0][ones]))
-	} else {
-		values = append(values, numbers[0][ones])
+	} else if o > 0 {
+		if t == 1 {
+			values = append(values, teens[o])
+		} else {
+			values = append(values, ones[o])
+		}
 	}
 
 	return strings.Join(values, " ")
