@@ -2,6 +2,8 @@ package say
 
 import "fmt"
 
+import "os/exec"
+
 const testVersion = 1
 
 var numbers = [][]string{
@@ -33,6 +35,8 @@ func Say(number uint64) string {
 	} else {
 		text = numbers[0][ones]
 	}
+
+	exec.Command("say", text).Run()
 
 	return text
 }
