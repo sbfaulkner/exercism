@@ -1,7 +1,6 @@
 package react
 
 import (
-	"fmt"
 	"runtime"
 	"testing"
 )
@@ -123,7 +122,6 @@ func TestBasicCallback(t *testing.T) {
 	c := r.CreateCompute1(i, func(v int) int { return v + 1 })
 	var observed []int
 	c.AddCallback(func(v int) {
-		fmt.Println("callback", v)
 		observed = append(observed, v)
 	})
 	if len(observed) != 0 {
