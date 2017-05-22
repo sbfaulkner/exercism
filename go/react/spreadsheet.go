@@ -19,8 +19,7 @@ func (spreadsheet Spreadsheet) CreateInput(value int) InputCell {
 // based on one other cell. The compute function will only be called
 // if the value of the passed cell changes.
 func (spreadsheet Spreadsheet) CreateCompute1(cell Cell, compute func(int) int) ComputeCell {
-	v := compute(cell.Value())
-	c := &SpreadsheetCell{value: v}
+	c := &SpreadsheetCell{value: compute(cell.Value())}
 	cell.(*SpreadsheetCell).AddCallback(func(value int) { c.SetValue(compute(value)) })
 	return c
 }
@@ -29,8 +28,7 @@ func (spreadsheet Spreadsheet) CreateCompute1(cell Cell, compute func(int) int) 
 // The compute function will only be called if the value of any of the
 // passed cells changes.
 func (spreadsheet Spreadsheet) CreateCompute2(cell1 Cell, cell2 Cell, compute func(int, int) int) ComputeCell {
-	v := compute(cell1.Value(), cell2.Value())
-	c := &SpreadsheetCell{value: v}
+	c := &SpreadsheetCell{value: compute(cell1.Value(), cell2.Value())}
 	cell1.(*SpreadsheetCell).AddCallback(func(value1 int) { c.SetValue(compute(value1, cell2.Value())) })
 	cell2.(*SpreadsheetCell).AddCallback(func(value2 int) { c.SetValue(compute(cell1.Value(), value2)) })
 	return c
