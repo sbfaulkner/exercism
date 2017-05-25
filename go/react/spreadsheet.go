@@ -22,9 +22,12 @@ func (spreadsheet Spreadsheet) CreateInput(value int) InputCell {
 func (spreadsheet Spreadsheet) CreateCompute1(cell Cell, compute func(int) int) ComputeCell {
 	c := NewCell(compute(cell.Value()))
 
-	cell.(*SpreadsheetCell).AddCallback(func(value int) {
-		c.SetValue(compute(value))
-	})
+	cell.(*SpreadsheetCell).addDependent(
+		c,
+		func(value int) {
+			c.setValue(compute(value))
+		},
+	)
 
 	return c
 }
@@ -35,13 +38,18 @@ func (spreadsheet Spreadsheet) CreateCompute1(cell Cell, compute func(int) int) 
 func (spreadsheet Spreadsheet) CreateCompute2(cell1 Cell, cell2 Cell, compute func(int, int) int) ComputeCell {
 	c := NewCell(compute(cell1.Value(), cell2.Value()))
 
-	cell1.(*SpreadsheetCell).AddCallback(func(value1 int) {
-		c.SetValue(compute(value1, cell2.Value()))
-	})
-
-	cell2.(*SpreadsheetCell).AddCallback(func(value2 int) {
-		c.SetValue(compute(cell1.Value(), value2))
-	})
+	cell1.(*SpreadsheetCell).addDependent(
+		c,
+		func(value1 int) {
+			c.setValue(compute(value1, cell2.Value()))
+		},
+	)
+	cell2.(*SpreadsheetCell).addDependent(
+		c,
+		func(value2 int) {
+			c.setValue(compute(cell1.Value(), value2))
+		},
+	)
 
 	return c
 }
