@@ -1,9 +1,5 @@
 package react
 
-import (
-	"fmt"
-)
-
 var callbackID int
 
 // SpreadsheetCell defines a cell in a spreadsheet.
@@ -12,6 +8,7 @@ type SpreadsheetCell struct {
 	dependents []spreadsheetCellDependency
 	callbacks  map[int]func(int)
 	dirty      bool
+	lastValue  int
 }
 
 type spreadsheetCellDependency struct {
@@ -36,9 +33,15 @@ func (cell *SpreadsheetCell) SetValue(value int) {
 }
 
 func (cell *SpreadsheetCell) setValue(value int) {
-	if cell.value != value {
+	if value != cell.value {
+		if !cell.dirty {
+			cell.lastValue = cell.value
+			cell.dirty = true
+		} else if value == cell.lastValue {
+			cell.dirty = false
+		}
+
 		cell.value = value
-		cell.dirty = true
 
 		for _, dependent := range cell.dependents {
 			dependent.update(value)
@@ -52,11 +55,11 @@ func (cell *SpreadsheetCell) performCallbacks() {
 			callback(cell.value)
 		}
 
+		cell.dirty = false
+
 		for _, dependent := range cell.dependents {
 			dependent.cell.performCallbacks()
 		}
-
-		cell.dirty = false
 	}
 }
 
