@@ -12,20 +12,14 @@ type Lists [][]int
 type Strings []string
 
 // Keep filters a collection of ints to only contain the members where the provided function returns true.
-func (i Ints) Keep(strainer func(int) bool) Ints {
-	o := Ints{}
-
+func (i Ints) Keep(strainer func(int) bool) (o Ints) {
 	for _, v := range i {
 		if strainer(v) {
 			o = append(o, v)
 		}
 	}
 
-	if len(o) == 0 {
-		return nil
-	}
-
-	return o
+	return
 }
 
 // Discard filters a collection to only contain the members where the provided function returns false.
@@ -34,35 +28,23 @@ func (i Ints) Discard(strainer func(int) bool) Ints {
 }
 
 // Keep filters a collection of lists to only contain the members where the provided function returns true.
-func (l Lists) Keep(strainer func([]int) bool) Lists {
-	o := Lists{}
-
+func (l Lists) Keep(strainer func([]int) bool) (o Lists) {
 	for _, v := range l {
 		if strainer(v) {
 			o = append(o, v)
 		}
 	}
 
-	if len(o) == 0 {
-		return nil
-	}
-
-	return o
+	return
 }
 
 // Keep filters a collection of strings to only contain the members where the provided function returns true.
-func (s Strings) Keep(strainer func(string) bool) Strings {
-	o := Strings{}
-
+func (s Strings) Keep(strainer func(string) bool) (o Strings) {
 	for _, v := range s {
 		if strainer(v) {
 			o = append(o, v)
 		}
 	}
 
-	if len(o) == 0 {
-		return nil
-	}
-
-	return o
+	return
 }
