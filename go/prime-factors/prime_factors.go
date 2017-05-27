@@ -12,6 +12,8 @@ func Factors(n int64) []int64 {
 		if n%f == 0 {
 			factors = append(factors, f)
 			n /= f
+		} else if f > 2 {
+			f += 2
 		} else {
 			f++
 		}
