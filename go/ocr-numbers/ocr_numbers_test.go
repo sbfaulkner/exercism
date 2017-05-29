@@ -128,13 +128,6 @@ func TestTestVersion(t *testing.T) {
 		t.Fatalf("Found testVersion = %v, want %v", testVersion, targetTestVersion)
 	}
 }
-func Test_recognizeDigit(t *testing.T) {
-	for i := 0; i < 10; i++ {
-		if res := recognizeDigit(tests[i].in); res != i {
-			t.Fatalf("recognizeDigit(`%s`) = %d, want %d.", tests[i].in, res, i)
-		}
-	}
-}
 
 func TestRecognize(t *testing.T) {
 	for _, test := range tests {

@@ -1,29 +1,130 @@
 package ocr
 
+import (
+	"fmt"
+	"strings"
+)
+
 const testVersion = 1
 
-// Define a function recognizeDigit as README Step 1 except make it recognize
-// all ten digits 0 to 9.  Pick what you like for parameters and return values
-// but make it useful as a subroutine for README step 2.
-//
-// For README Step 2 define,
-//
-//    func Recognize(string) []string
-//
-// and implement it using recognizeDigit.
-//
-// Input strings tested here have a \n at the beginning of each line and
-// no trailing \n on the last line. (This makes for readable raw string
-// literals.)
-//
-// For bonus points, gracefully handle misformatted data.  What should you
-// do with a partial cell?  Discard it?  Pad with spaces?  Report it with a
-// "?" character?  What should you do if the first character is not \n?
+// Recognize returns multiple sets of digits within the provided input lines.
+func Recognize(input string) (output []string) {
+	lines := strings.Split(input, "\n")[1:]
 
-func Recognize(string) []string {
-	return nil
+	for l := 0; l < len(lines); l += 4 {
+		output = append(output, recognizeDigits(lines[l:l+3]))
+	}
+
+	return
 }
 
-func recognizeDigit(input string) int {
-	return -1
+// recognizeDigits returns the set of digits within the provided input lines.
+func recognizeDigits(lines []string) (digits string) {
+	length := maxLength(lines)
+
+	for i := 0; i < length; i += 3 {
+		digits += recognizeDigit(lines, i)
+	}
+
+	return
+}
+
+// maxLength returns the length of the longest line within the provided lines.
+func maxLength(lines []string) (length int) {
+	for _, line := range lines {
+		if len(line) > length {
+			length = len(line)
+		}
+	}
+
+	return
+}
+
+// recognitionState is used to maintain internal state when recognizing digits.
+type recognitionState int
+
+// states for recognizing digits
+const (
+	digitUnknown recognitionState = 0x00
+	digitStart   recognitionState = 0x01
+
+	digit02356789 recognitionState = 0x10
+	digit14       recognitionState = 0x11
+
+	digit0  recognitionState = 0x20
+	digit1  recognitionState = 0x21
+	digit23 recognitionState = 0x22
+	digit4  recognitionState = 0x24
+	digit56 recognitionState = 0x25
+	digit7  recognitionState = 0x27
+	digit89 recognitionState = 0x29
+
+	digitFinal0 recognitionState = 0x30
+	digitFinal1 recognitionState = 0x31
+	digitFinal2 recognitionState = 0x32
+	digitFinal3 recognitionState = 0x33
+	digitFinal4 recognitionState = 0x34
+	digitFinal5 recognitionState = 0x35
+	digitFinal6 recognitionState = 0x36
+	digitFinal7 recognitionState = 0x37
+	digitFinal8 recognitionState = 0x38
+	digitFinal9 recognitionState = 0x39
+)
+
+// state transition table for digit recognition
+var digitPatterns = map[recognitionState]map[string]recognitionState{
+	digitStart: {
+		" _ ": digit02356789,
+		"   ": digit14,
+	},
+	digit02356789: {
+		"| |": digit0,
+		" _|": digit23,
+		"|_ ": digit56,
+		"  |": digit7,
+		"|_|": digit89,
+	},
+	digit14: {
+		"  |": digit1,
+		"|_|": digit4,
+	},
+	digit0: {
+		"|_|": digitFinal0,
+	},
+	digit23: {
+		"|_ ": digitFinal2,
+		" _|": digitFinal3,
+	},
+	digit56: {
+		" _|": digitFinal5,
+		"|_|": digitFinal6,
+	},
+	digit7: {
+		"  |": digitFinal7,
+	},
+	digit89: {
+		"|_|": digitFinal8,
+		" _|": digitFinal9,
+	},
+	digit1: {
+		"  |": digitFinal1,
+	},
+	digit4: {
+		"  |": digitFinal4,
+	},
+}
+
+// recognizeDigit returns the digit at the specified offset within the provided input lines.
+func recognizeDigit(input []string, offset int) string {
+	state := digitStart
+
+	for _, line := range input {
+		l := fmt.Sprintf("%-3s", line[offset:])[0:3]
+		state = digitPatterns[state][l]
+		if state == digitUnknown {
+			return "?"
+		}
+	}
+
+	return string(state)
 }
