@@ -33,12 +33,7 @@ func (s *School) Add(student string, grade int) {
 }
 
 func (g *Grade) add(student string) {
-	s := sort.SearchStrings(g.students, student)
-	if s < len(g.students) {
-		g.students = append(g.students[0:s], append([]string{student}, g.students[s:]...)...)
-	} else {
-		g.students = append(g.students, student)
-	}
+	g.students = append(g.students, student)
 }
 
 // Grade returns the members of a grade
@@ -55,5 +50,10 @@ func (s *School) Grade(grade int) []string {
 // Enrollment returns the grades for the school
 func (s *School) Enrollment() []Grade {
 	sort.Slice(s.grades, func(i, j int) bool { return s.grades[i].grade < s.grades[j].grade })
+
+	for _, g := range s.grades {
+		sort.Strings(g.students)
+	}
+
 	return s.grades
 }
