@@ -34,12 +34,10 @@ func (s *SearchTreeData) Insert(n int) {
 // MapString maps the tree data using a provided function to return an array of string values
 func (s *SearchTreeData) MapString(f func(int) string) (result []string) {
 	if s.left != nil {
-		result = s.left.MapString(f)
+		result = append(s.left.MapString(f), f(s.data))
 	} else {
-		result = []string{}
+		result = []string{f(s.data)}
 	}
-
-	result = append(result, f(s.data))
 
 	if s.right != nil {
 		result = append(result, s.right.MapString(f)...)
@@ -51,12 +49,10 @@ func (s *SearchTreeData) MapString(f func(int) string) (result []string) {
 // MapInt maps the tree data using a provided function to return an array of int values
 func (s *SearchTreeData) MapInt(f func(int) int) (result []int) {
 	if s.left != nil {
-		result = s.left.MapInt(f)
+		result = append(s.left.MapInt(f), f(s.data))
 	} else {
-		result = []int{}
+		result = []int{f(s.data)}
 	}
-
-	result = append(result, f(s.data))
 
 	if s.right != nil {
 		result = append(result, s.right.MapInt(f)...)
