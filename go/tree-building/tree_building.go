@@ -8,15 +8,18 @@ import (
 
 const testVersion = 4
 
+// Record is abstract data type for this exercise
 type Record struct {
 	ID, Parent int
 }
 
+// Node is used to build a tree to model the relationships of the records
 type Node struct {
 	ID       int
 	Children []*Node
 }
 
+// Build creates a tree of Nodes given a set of records
 func Build(records []Record) (*Node, error) {
 	if len(records) == 0 {
 		return nil, nil
