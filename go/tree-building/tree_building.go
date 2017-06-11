@@ -55,6 +55,5 @@ func Build(records []Record) (*Node, error) {
 }
 
 func (n *Node) addChild(child *Node) {
-	pos := sort.Search(len(n.Children), func(i int) bool { return n.Children[i].ID >= child.ID })
-	n.Children = append(n.Children[0:pos], append([]*Node{child}, n.Children[pos:]...)...)
+	n.Children = append(n.Children, child)
 }
