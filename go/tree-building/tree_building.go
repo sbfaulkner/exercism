@@ -17,66 +17,83 @@ type Node struct {
 	Children []*Node
 }
 
-type Mismatch struct{}
-
-func (m Mismatch) Error() string {
-	return "incorrect number of nodes"
-}
-
 func Build(records []Record) (*Node, error) {
 	if len(records) == 0 {
 		return nil, nil
 	}
 
-	root := &Node{}
-	todo := []*Node{root}
-	n := 1
+	nodes := map[int]*Node{}
 
-	for {
-		if len(todo) == 0 {
-			break
+	for _, r := range records {
+		if r.ID == 0 && r.Parent > 0 {
+			return nil, errors.New("tree: root can't have parent")
 		}
 
-		newTodo := []*Node(nil)
+		n := nodes[r.ID]
 
-		for _, t := range todo {
-			for _, r := range records {
-				if r.Parent == t.ID {
-					if r.ID < t.ID {
-						return nil, errors.New("parent exceeds id")
-					}
+		if n == nil {
+			nodes[r.ID] = &Node{ID: r.ID}
+			n = nodes[r.ID]
+		} else {
+			n.ID = r.ID
+		}
 
-					if r.ID == t.ID {
-						if r.ID != 0 {
-							return nil, fmt.Errorf("node references self")
-						}
-					} else {
-						n++
-						nn := &Node{ID: r.ID}
-						newTodo = append(newTodo, nn)
+		p := nodes[r.Parent]
 
-						t.addChild(nn)
-					}
-				}
+		if p == nil {
+			nodes[r.Parent] = &Node{ID: -1}
+			p = nodes[r.Parent]
+		}
+
+		if n.ID > 0 {
+			if n.ID == p.ID {
+				return nil, fmt.Errorf("tree: self referential node - %d", n.ID)
 			}
+
+			if n.ID < p.ID {
+				return nil, fmt.Errorf("tree: invalid parent node - %d < %d", n.ID, p.ID)
+			}
+
+			if n.isAncestorOf(p) {
+				return nil, fmt.Errorf("tree: circular reference - %d is ancestor of %d", n.ID, p.ID)
+			}
+
+			p.addChild(n)
 		}
-		todo = newTodo
 	}
 
-	if n != len(records) {
-		return nil, Mismatch{}
+	for id, n := range nodes {
+		if n.ID == -1 {
+			return nil, fmt.Errorf("tree: missing node - %d", id)
+		}
+
+		if id >= len(nodes) {
+			return nil, fmt.Errorf("tree: invalid node id - %d", id)
+		}
 	}
 
-	if err := root.chk(len(records)); err != nil {
-		return nil, err
-	}
-
-	return root, nil
+	return nodes[0], nil
 }
 
 func (n *Node) addChild(child *Node) {
 	pos := sort.Search(len(n.Children), func(i int) bool { return n.Children[i].ID >= child.ID })
 	n.Children = append(n.Children[0:pos], append([]*Node{child}, n.Children[pos:]...)...)
+}
+
+func (n *Node) isAncestorOf(child *Node) bool {
+	pos := sort.Search(len(n.Children), func(i int) bool { return n.Children[i].ID >= child.ID })
+
+	if pos < len(n.Children) && n.Children[pos].ID == child.ID {
+		return true
+	}
+
+	for _, c := range n.Children {
+		if c.isAncestorOf(child) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (n *Node) chk(m int) error {
