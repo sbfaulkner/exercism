@@ -7,26 +7,37 @@ import (
 
 const testVersion = 3
 
-type readCounter struct {
-	r    io.Reader
+type ioCounter struct {
 	n    int64
 	nops int
 	mux  sync.RWMutex
 }
 
-func (rc *readCounter) ReadCount() (n int64, nops int) {
-	rc.mux.RLock()
-	defer rc.mux.RUnlock()
-	n, nops = rc.n, rc.nops
-	return
+func (ioc *ioCounter) count() (int64, int) {
+	ioc.mux.RLock()
+	defer ioc.mux.RUnlock()
+	return ioc.n, ioc.nops
+}
+
+func (ioc *ioCounter) add(n int) {
+	ioc.mux.Lock()
+	defer ioc.mux.Unlock()
+	ioc.nops++
+	ioc.n += int64(n)
+}
+
+type readCounter struct {
+	r io.Reader
+	c ioCounter
+}
+
+func (rc *readCounter) ReadCount() (int64, int) {
+	return rc.c.count()
 }
 
 func (rc *readCounter) Read(p []byte) (n int, err error) {
 	n, err = rc.r.Read(p)
-	rc.mux.Lock()
-	defer rc.mux.Unlock()
-	rc.nops++
-	rc.n += int64(n)
+	rc.c.add(n)
 	return
 }
 
@@ -36,25 +47,17 @@ func NewReadCounter(r io.Reader) ReadCounter {
 }
 
 type writeCounter struct {
-	w    io.Writer
-	n    int64
-	nops int
-	mux  sync.RWMutex
+	w io.Writer
+	c ioCounter
 }
 
 func (wc *writeCounter) WriteCount() (n int64, nops int) {
-	wc.mux.RLock()
-	defer wc.mux.RUnlock()
-	n, nops = wc.n, wc.nops
-	return
+	return wc.c.count()
 }
 
 func (wc *writeCounter) Write(p []byte) (n int, err error) {
 	n, err = wc.w.Write(p)
-	wc.mux.Lock()
-	defer wc.mux.Unlock()
-	wc.nops++
-	wc.n += int64(n)
+	wc.c.add(n)
 	return
 }
 
