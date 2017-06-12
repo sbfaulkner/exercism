@@ -85,6 +85,6 @@ func (rwc *readWriteCounter) WriteCount() (n int64, nops int) {
 }
 
 // NewReadWriteCounter wraps the provided io.Reader/io.Writer to count read/write operations and bytes read/written
-func NewReadWriteCounter(rw interface{}) ReadWriteCounter {
-	return &readWriteCounter{readCounter{r: rw.(io.Reader)}, writeCounter{w: rw.(io.Writer)}}
+func NewReadWriteCounter(rw io.ReadWriter) ReadWriteCounter {
+	return &readWriteCounter{readCounter{r: rw}, writeCounter{w: rw}}
 }
