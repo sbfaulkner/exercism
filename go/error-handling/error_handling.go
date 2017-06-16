@@ -6,9 +6,7 @@ const testVersion = 2
 func Use(o ResourceOpener, input string) (err error) {
 	var res Resource
 
-	res, err = o()
-
-	if err != nil {
+	if res, err = o(); err != nil {
 		if _, ok := err.(TransientError); ok {
 			return Use(o, input)
 		}
@@ -20,10 +18,8 @@ func Use(o ResourceOpener, input string) (err error) {
 		if r := recover(); r != nil {
 			if f, ok := r.(FrobError); ok {
 				res.Defrob(f.defrobTag)
-				err = f.inner
-			} else {
-				err = r.(error)
 			}
+			err = r.(error)
 		}
 
 		res.Close()
