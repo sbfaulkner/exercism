@@ -16,7 +16,6 @@ func New() *Graph {
 
 // AddNode adds a node with the specified label to the graph
 func (g *Graph) AddNode(nodeLabel string) {
-	(*g)[nodeLabel] = ""
 }
 
 // AddArc creates an arc between the two specified nodes (adding the nodes if necessary)
@@ -29,10 +28,6 @@ func (g *Graph) ArcList() []string {
 	a := make([]string, 0, len(*g))
 
 	for t, f := range *g {
-		if f == "" {
-			continue
-		}
-
 		a = append(a, fmt.Sprintf("%s -> %s", f, t))
 	}
 
