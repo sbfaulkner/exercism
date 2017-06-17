@@ -1,8 +1,6 @@
 package pov
 
-import (
-	"fmt"
-)
+import "strings"
 
 const testVersion = 2
 
@@ -28,7 +26,7 @@ func (g *Graph) ArcList() []string {
 	a := make([]string, 0, len(*g))
 
 	for t, f := range *g {
-		a = append(a, fmt.Sprintf("%s -> %s", f, t))
+		a = append(a, strings.Join([]string{f, "->", t}, " "))
 	}
 
 	return a
@@ -50,9 +48,7 @@ func (g *Graph) ChangeRoot(oldRoot, newRoot string) *Graph {
 }
 
 func (g *Graph) invert(label string) {
-	f := (*g)[label]
-
-	if f != "" {
+	if f := (*g)[label]; f != "" {
 		g.invert(f)
 		(*g)[f] = label
 	}
