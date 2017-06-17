@@ -41,7 +41,7 @@ func (g *Graph) ArcList() []string {
 
 // ChangeRoot returns a new directed graph with the specified (new) root
 func (g *Graph) ChangeRoot(oldRoot, newRoot string) *Graph {
-	ng := Graph{}
+	ng := make(Graph, len(*g))
 
 	for t, f := range *g {
 		ng[t] = f
