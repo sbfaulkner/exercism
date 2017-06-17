@@ -26,7 +26,7 @@ func (g *Graph) AddArc(from, to string) {
 
 // ArcList returns a string representation of all arcs in the directed graph
 func (g *Graph) ArcList() []string {
-	a := []string{}
+	a := make([]string, 0, len(*g))
 
 	for t, f := range *g {
 		if f == "" {
