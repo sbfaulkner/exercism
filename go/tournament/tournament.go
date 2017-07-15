@@ -10,6 +10,7 @@ import (
 
 const testVersion = 4
 
+// Team holds a team name and their statistics for a Tournament
 type Team struct {
 	Name string
 	MP,
@@ -19,29 +20,35 @@ type Team struct {
 	P uint
 }
 
+// RecordWin updates a Team's statistics for a win
 func (team *Team) RecordWin() {
 	team.MP++
 	team.W++
 	team.P += 3
 }
 
+// RecordDraw updates a Team's statistics for a draw
 func (team *Team) RecordDraw() {
 	team.MP++
 	team.D++
 	team.P++
 }
 
+// RecordLoss updates a Team's statistics for a loss
 func (team *Team) RecordLoss() {
 	team.MP++
 	team.L++
 }
 
+// Stringify a Team
 func (team Team) String() string {
 	return fmt.Sprintf("{%s MP=%d W=%d D=%d L=%d P=%d}", team.Name, team.MP, team.W, team.D, team.L, team.P)
 }
 
+// Tournament represents a collection of Teams participating in a tournament
 type Tournament map[string]*Team
 
+// Tally reads match results and writes standings
 func Tally(r io.Reader, w io.Writer) error {
 	reader := bufio.NewScanner(r)
 
@@ -86,6 +93,7 @@ func Tally(r io.Reader, w io.Writer) error {
 	return nil
 }
 
+// Team finds a team within a tournament, adding it if necessary
 func (tournament *Tournament) Team(team string) *Team {
 	t := (*tournament)[team]
 
@@ -97,18 +105,22 @@ func (tournament *Tournament) Team(team string) *Team {
 	return t
 }
 
+// RecordWin records stats for a win by the team with the specified name
 func (tournament *Tournament) RecordWin(team string) {
 	tournament.Team(team).RecordWin()
 }
 
+// RecordDraw records stats for a draw by the team with the specified name
 func (tournament *Tournament) RecordDraw(team string) {
 	tournament.Team(team).RecordDraw()
 }
 
+// RecordLoss records stats for a loss by the team with the specified name
 func (tournament *Tournament) RecordLoss(team string) {
 	tournament.Team(team).RecordLoss()
 }
 
+// Standings returns a slice of the Teams in the tournament sorted by their points
 func (tournament Tournament) Standings() []*Team {
 	standings := make([]*Team, 0, len(tournament))
 
