@@ -1,59 +1,65 @@
 package robot
 
+import "fmt"
+
 // Action is used to communicate the robot's intention to the room
 type Action Command
 
 // StartRobot pipes actions to the room and closes the channel when done
 func StartRobot(cmd chan Command, act chan Action) {
 	for {
-		if c, ok := <-cmd; ok {
+		select {
+		case c := <-cmd:
 			act <- Action(c)
-		} else {
-			break
 		}
 	}
-
-	close(act)
 }
 
 // Room simulates the motion of a robot within a room
 func Room(extent Rect, robot Step2Robot, act chan Action, rep chan Step2Robot) {
 	for {
-		if a, ok := <-act; ok {
+		select {
+		case a := <-act:
 			switch a {
+			case 0:
+				rep <- robot
 			case 'A':
-				robot.advance(extent)
+				robot.advance(func(p Pos) bool {
+					return p.Easting >= extent.Min.Easting &&
+						p.Northing >= extent.Min.Northing &&
+						p.Easting <= extent.Max.Easting &&
+						p.Northing <= extent.Max.Northing
+				})
 			case 'L':
 				robot.left()
 			case 'R':
 				robot.right()
 			}
-		} else {
-			rep <- robot
-			break
 		}
 	}
 }
 
+func (robot Step2Robot) String() string {
+	return fmt.Sprintf("{%s %v}", robot.Dir, robot.Pos)
+}
+
 // advance the robot within the bounds provided
-func (robot *Step2Robot) advance(extent Rect) {
+func (robot *Step2Robot) advance(valid func(p Pos) bool) {
+	dest := robot.Pos
+
 	switch robot.Dir {
 	case N:
-		if robot.Northing < extent.Max.Northing {
-			robot.Northing++
-		}
+		dest.Northing++
 	case S:
-		if robot.Northing > extent.Min.Northing {
-			robot.Northing--
-		}
+		dest.Northing--
 	case E:
-		if robot.Easting < extent.Max.Easting {
-			robot.Easting++
-		}
+		dest.Easting++
 	case W:
-		if robot.Easting > extent.Min.Easting {
-			robot.Easting--
-		}
+		dest.Easting--
+	}
+
+	if valid(dest) {
+		robot.Pos = dest
 	}
 }
 

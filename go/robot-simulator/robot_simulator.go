@@ -35,16 +35,16 @@ func Advance() {
 }
 
 // String converts a direction to a string representation
-func (d Dir) String() (direction string) {
-	switch d {
+func (direction Dir) String() (s string) {
+	switch direction {
 	case N:
-		direction = "North"
+		s = "North"
 	case S:
-		direction = "South"
+		s = "South"
 	case E:
-		direction = "East"
+		s = "East"
 	case W:
-		direction = "West"
+		s = "West"
 	}
 
 	return
