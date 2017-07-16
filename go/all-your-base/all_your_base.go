@@ -12,6 +12,7 @@ var (
 	ErrInvalidBase  = errors.New("allyourbase: invalid base")
 )
 
+// ConvertToBase converts a stream of digits from one base to another
 func ConvertToBase(inputBase uint64, inputDigits []uint64, outputBase uint64) ([]uint64, error) {
 	if inputBase < 2 || outputBase < 2 {
 		return []uint64{}, ErrInvalidBase
@@ -30,6 +31,7 @@ func ConvertToBase(inputBase uint64, inputDigits []uint64, outputBase uint64) ([
 	return toBase(outputBase, n), nil
 }
 
+// fromBase recursively converts a stream of digits in a given base to an integer
 func fromBase(base uint64, digits []uint64) (uint64, error) {
 	if len(digits) == 0 {
 		return 0, nil
@@ -54,6 +56,7 @@ func fromBase(base uint64, digits []uint64) (uint64, error) {
 	return n*base + d, nil
 }
 
+// toBase recursively converts an integer to a stream of digits in a given base
 func toBase(base uint64, n uint64) []uint64 {
 	if n == 0 {
 		return []uint64{}
