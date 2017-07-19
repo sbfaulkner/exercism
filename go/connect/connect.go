@@ -18,17 +18,17 @@ type Hex struct {
 }
 
 // Board is the collection of hexes for the playing area
-type Board [][]*Hex
+type Board [][]Hex
 
 // NewBoard creates a Board from a slice of strings containing the current board state
 func NewBoard(board []string) *Board {
-	hexes := make([][]*Hex, len(board))
+	hexes := make([][]Hex, len(board))
 
 	for r := range hexes {
-		hexes[r] = make([]*Hex, len(board[r]))
+		hexes[r] = make([]Hex, len(board[r]))
 
 		for c := range hexes[r] {
-			hexes[r][c] = &Hex{stone: Stone(board[r][c])}
+			hexes[r][c].stone = Stone(board[r][c])
 		}
 	}
 
@@ -43,7 +43,7 @@ func ResultOf(board []string) (string, error) {
 }
 
 // Winner determines the winner of a given Board
-func (b Board) Winner() (string, error) {
+func (b *Board) Winner() (string, error) {
 	if b.checkDown(WHITE) {
 		return string(WHITE), nil
 	}
@@ -56,8 +56,8 @@ func (b Board) Winner() (string, error) {
 }
 
 // checkAcross checks for paths of a specific colour from the leftmost hexes to a righthand hex
-func (b Board) checkAcross(stone Stone) bool {
-	for r := range b {
+func (b *Board) checkAcross(stone Stone) bool {
+	for r := range *b {
 		if b.followAcross(0, r, BLACK) {
 			return true
 		}
@@ -67,8 +67,8 @@ func (b Board) checkAcross(stone Stone) bool {
 }
 
 // checkDown checks for paths of a specific colour from the topmost hexes to a bottom hex
-func (b Board) checkDown(stone Stone) bool {
-	for c := range b[0] {
+func (b *Board) checkDown(stone Stone) bool {
+	for c := range (*b)[0] {
 		if b.followDown(c, 0, WHITE) {
 			return true
 		}
@@ -90,12 +90,12 @@ var directions = []struct {
 }
 
 // followAcross checks a specific hex for a colour and recursively follows a path across the board
-func (b Board) followAcross(c, r int, s Stone) bool {
+func (b *Board) followAcross(c, r int, s Stone) bool {
 	if !b.visit(c, r, s) {
 		return false
 	}
 
-	if c == len(b[r])-1 {
+	if c == len((*b)[r])-1 {
 		return true
 	}
 
@@ -109,12 +109,12 @@ func (b Board) followAcross(c, r int, s Stone) bool {
 }
 
 // followDown checks a specific hex for a colour and recursively follows a path down the board
-func (b Board) followDown(c, r int, s Stone) bool {
+func (b *Board) followDown(c, r int, s Stone) bool {
 	if !b.visit(c, r, s) {
 		return false
 	}
 
-	if r == len(b)-1 {
+	if r == len(*b)-1 {
 		return true
 	}
 
@@ -137,7 +137,7 @@ func (b *Board) visit(c, r int, s Stone) bool {
 		return false
 	}
 
-	h := (*b)[r][c]
+	h := &(*b)[r][c]
 
 	if h.stone != s {
 		return false
