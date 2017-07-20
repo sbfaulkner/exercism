@@ -11,25 +11,28 @@ import (
 
 const testVersion = 4
 
+// Entry is the data for a single ledger entry
 type Entry struct {
 	Date        string // "Y-m-d"
 	Description string
 	Change      int // in cents
 }
 
+// outputData is used to communicate the resulting output back over a channel
 type outputData struct {
 	i int
 	s string
 	e error
 }
 
+// currencies contains the mapping of a currency to the appropriate currency symbol
 var currencies = map[string]string{
 	"EUR": "€",
 	"USD": "$",
 }
 
+// localeData defines regional formats and headings
 type localeData struct {
-	locale             string
 	headers            []interface{}
 	dateFormat         string
 	positiveFormat     string
@@ -37,6 +40,7 @@ type localeData struct {
 	thousandsSeparator string
 }
 
+// formatCurrency formats a given number of cents using the provided currency symbol depending on the locale
 func (l localeData) formatCurrency(cents int, currencySymbol string) string {
 	format := l.positiveFormat
 
@@ -67,13 +71,14 @@ func (l localeData) formatCurrency(cents int, currencySymbol string) string {
 	return fmt.Sprintf(format, currencySymbol, dollarText, cents)
 }
 
+// formatDate formats a time.Time using a locale specific date format
 func (l localeData) formatDate(t time.Time) string {
 	return t.Format(l.dateFormat)
 }
 
+// locales is the localeData for the known regions
 var locales = map[string]localeData{
 	"en-US": {
-		locale:             "en-US",
 		headers:            []interface{}{"Date", "Description", "Change"},
 		dateFormat:         "01/02/2006",
 		positiveFormat:     "%s%s.%02d ",
@@ -81,7 +86,6 @@ var locales = map[string]localeData{
 		thousandsSeparator: ",",
 	},
 	"nl-NL": {
-		locale:             "nl-NL",
 		headers:            []interface{}{"Datum", "Omschrijving", "Verandering"},
 		dateFormat:         "02-01-2006",
 		positiveFormat:     "%s %s,%02d ",
@@ -97,22 +101,27 @@ var (
 	ErrInvalidLocale   = errors.New("ledger: invalid locale")
 )
 
+// output formats for the ledger headers and line entries
 const (
 	headerFormat string = "%-10s | %-25s | %s\n"
 	lineFormat   string = "%s | %-25s | %13s\n"
 )
 
-type ByEntry []Entry
+// byEntry provides an interface to sort the ledger entries
+type byEntry []Entry
 
-func (e ByEntry) Len() int {
+// Len returns the number of entries
+func (e byEntry) Len() int {
 	return len(e)
 }
 
-func (e ByEntry) Swap(i, j int) {
+// Swap the two specified entries
+func (e byEntry) Swap(i, j int) {
 	e[i], e[j] = e[j], e[i]
 }
 
-func (e ByEntry) Less(i, j int) bool {
+// Less returns true if an entry is less than the other based on Date, Description and Change in that order
+func (e byEntry) Less(i, j int) bool {
 	if e[i].Date < e[j].Date {
 		return true
 	}
@@ -132,6 +141,7 @@ func (e ByEntry) Less(i, j int) bool {
 	return e[i].Change < e[j].Change
 }
 
+// FormatLedger returns a string containing formatted ledger entries using a specified locale and currency
 func FormatLedger(currency string, locale string, entries []Entry) (string, error) {
 	currencySymbol, validCurrency := currencies[currency]
 	if !validCurrency {
@@ -145,7 +155,7 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 
 	entriesCopy := make([]Entry, len(entries))
 	copy(entriesCopy, entries)
-	sort.Sort(ByEntry(entriesCopy))
+	sort.Sort(byEntry(entriesCopy))
 
 	// declare output string and add (localized) headers (ie. in either Netherlands Dutch or US English)
 	s := fmt.Sprintf(headerFormat, currentLocale.headers...)
@@ -153,7 +163,7 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 	// Parallelism, always a great idea
 	co := make(chan outputData)
 	for i, et := range entriesCopy {
-		go processEntry(i, et, co, currencySymbol, currentLocale)
+		go formatEntry(i, et, co, currencySymbol, currentLocale)
 	}
 
 	// read from channel and insert lines in output collection at the correct index
@@ -174,7 +184,8 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 	return s, nil
 }
 
-func processEntry(i int, entry Entry, co chan outputData, currencySymbol string, currentLocale localeData) {
+// formatEntry formats the provided entry given a currency symbol and locale data
+func formatEntry(i int, entry Entry, co chan outputData, currencySymbol string, currentLocale localeData) {
 	t, err := time.Parse("2006-01-02", entry.Date)
 	if err != nil {
 		co <- outputData{e: ErrInvalidDate}
