@@ -21,18 +21,56 @@ type outputData struct {
 	e error
 }
 
+var currencies = map[string]string{
+	"EUR": "€",
+	"USD": "$",
+}
+
+type localeData struct {
+	locale        string
+	headers       []interface{}
+	dateFormat    string
+	dateSeparator string
+}
+
+var locales = map[string]localeData{
+	"en-US": {
+		locale:        "en-US",
+		headers:       []interface{}{"Date", "Description", "Change"},
+		dateFormat:    "03/07/2015",
+		dateSeparator: "/",
+	},
+	"nl-NL": {
+		locale:        "nl-NL",
+		headers:       []interface{}{"Datum", "Omschrijving", "Verandering"},
+		dateFormat:    "07-03-2015",
+		dateSeparator: "-",
+	},
+}
+
+// Errors for FormatLedger
+var (
+	ErrInvalidCurrency = errors.New("ledger: invalid currency")
+	ErrInvalidDate     = errors.New("ledger: invalid date")
+	ErrInvalidLocale   = errors.New("ledger: invalid locale")
+)
+
 const formatHeader string = "%-10s | %-25s | %s\n"
 
 func FormatLedger(currency string, locale string, entries []Entry) (string, error) {
+	currencySymbol, validCurrency := currencies[currency]
+	if !validCurrency {
+		return "", ErrInvalidCurrency
+	}
+
+	currentLocale, validLocale := locales[locale]
+	if !validLocale {
+		return "", ErrInvalidLocale
+	}
+
 	entriesCopy := make([]Entry, len(entries))
 
 	copy(entriesCopy, entries)
-
-	if len(entries) == 0 {
-		if _, err := FormatLedger(currency, "en-US", []Entry{{Date: "2014-01-01", Description: "", Change: 0}}); err != nil {
-			return "", err
-		}
-	}
 
 	m1 := map[bool]int{true: 0, false: 1}
 	m2 := map[bool]int{true: -1, false: 1}
@@ -55,19 +93,12 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 	}
 
 	// declare output string and add (localized) headers (ie. in either Netherlands Dutch or US English)
-	var s string
-	if locale == "nl-NL" {
-		s = fmt.Sprintf(formatHeader, "Datum", "Omschrijving", "Verandering")
-	} else if locale == "en-US" {
-		s = fmt.Sprintf(formatHeader, "Date", "Description", "Change")
-	} else {
-		return "", errors.New("")
-	}
+	s := fmt.Sprintf(formatHeader, currentLocale.headers...)
 
 	// Parallelism, always a great idea
 	co := make(chan outputData)
 	for i, et := range entriesCopy {
-		go processEntry(i, et, co, currency, locale)
+		go processEntry(i, et, co, currencySymbol, currentLocale)
 	}
 
 	// read from channel and insert lines in output collection at the correct index
@@ -88,16 +119,16 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 	return s, nil
 }
 
-func processEntry(i int, entry Entry, co chan outputData, currency string, locale string) {
+func processEntry(i int, entry Entry, co chan outputData, currencySymbol string, currentLocale localeData) {
 	if len(entry.Date) != 10 {
-		co <- outputData{e: errors.New("")}
+		co <- outputData{e: ErrInvalidDate}
 	}
 	d1, d2, d3, d4, d5 := entry.Date[0:4], entry.Date[4], entry.Date[5:7], entry.Date[7], entry.Date[8:10]
 	if d2 != '-' {
-		co <- outputData{e: errors.New("")}
+		co <- outputData{e: ErrInvalidDate}
 	}
 	if d4 != '-' {
-		co <- outputData{e: errors.New("")}
+		co <- outputData{e: ErrInvalidDate}
 	}
 	de := entry.Description
 	if len(de) > 25 {
@@ -106,10 +137,10 @@ func processEntry(i int, entry Entry, co chan outputData, currency string, local
 		de = de + strings.Repeat(" ", 25-len(de))
 	}
 	var d string
-	if locale == "nl-NL" {
-		d = d5 + "-" + d3 + "-" + d1
-	} else if locale == "en-US" {
-		d = d3 + "/" + d5 + "/" + d1
+	if currentLocale.locale == "nl-NL" {
+		d = d5 + currentLocale.dateSeparator + d3 + currentLocale.dateSeparator + d1
+	} else if currentLocale.locale == "en-US" {
+		d = d3 + currentLocale.dateSeparator + d5 + currentLocale.dateSeparator + d1
 	}
 	negative := false
 	cents := entry.Change
@@ -118,14 +149,8 @@ func processEntry(i int, entry Entry, co chan outputData, currency string, local
 		negative = true
 	}
 	var a string
-	if locale == "nl-NL" {
-		if currency == "EUR" {
-			a += "€"
-		} else if currency == "USD" {
-			a += "$"
-		} else {
-			co <- outputData{e: errors.New("")}
-		}
+	if currentLocale.locale == "nl-NL" {
+		a += currencySymbol
 		a += " "
 		centsStr := strconv.Itoa(cents)
 		switch len(centsStr) {
@@ -154,17 +179,11 @@ func processEntry(i int, entry Entry, co chan outputData, currency string, local
 		} else {
 			a += " "
 		}
-	} else if locale == "en-US" {
+	} else if currentLocale.locale == "en-US" {
 		if negative {
 			a += "("
 		}
-		if currency == "EUR" {
-			a += "€"
-		} else if currency == "USD" {
-			a += "$"
-		} else {
-			co <- outputData{e: errors.New("")}
-		}
+		a += currencySymbol
 		centsStr := strconv.Itoa(cents)
 		switch len(centsStr) {
 		case 1:
@@ -192,8 +211,6 @@ func processEntry(i int, entry Entry, co chan outputData, currency string, local
 		} else {
 			a += " "
 		}
-	} else {
-		co <- outputData{e: errors.New("")}
 	}
 	var al int
 	for range a {
