@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const testVersion = 4
@@ -27,24 +28,25 @@ var currencies = map[string]string{
 }
 
 type localeData struct {
-	locale        string
-	headers       []interface{}
-	dateFormat    string
-	dateSeparator string
+	locale     string
+	headers    []interface{}
+	dateFormat string
+}
+
+func (l localeData) formatDate(t time.Time) string {
+	return t.Format(l.dateFormat)
 }
 
 var locales = map[string]localeData{
 	"en-US": {
-		locale:        "en-US",
-		headers:       []interface{}{"Date", "Description", "Change"},
-		dateFormat:    "03/07/2015",
-		dateSeparator: "/",
+		locale:     "en-US",
+		headers:    []interface{}{"Date", "Description", "Change"},
+		dateFormat: "01/02/2006",
 	},
 	"nl-NL": {
-		locale:        "nl-NL",
-		headers:       []interface{}{"Datum", "Omschrijving", "Verandering"},
-		dateFormat:    "07-03-2015",
-		dateSeparator: "-",
+		locale:     "nl-NL",
+		headers:    []interface{}{"Datum", "Omschrijving", "Verandering"},
+		dateFormat: "02-01-2006",
 	},
 }
 
@@ -120,28 +122,20 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 }
 
 func processEntry(i int, entry Entry, co chan outputData, currencySymbol string, currentLocale localeData) {
-	if len(entry.Date) != 10 {
+	t, err := time.Parse("2006-01-02", entry.Date)
+	if err != nil {
 		co <- outputData{e: ErrInvalidDate}
 	}
-	d1, d2, d3, d4, d5 := entry.Date[0:4], entry.Date[4], entry.Date[5:7], entry.Date[7], entry.Date[8:10]
-	if d2 != '-' {
-		co <- outputData{e: ErrInvalidDate}
-	}
-	if d4 != '-' {
-		co <- outputData{e: ErrInvalidDate}
-	}
+
 	de := entry.Description
 	if len(de) > 25 {
 		de = de[:22] + "..."
 	} else {
 		de = de + strings.Repeat(" ", 25-len(de))
 	}
-	var d string
-	if currentLocale.locale == "nl-NL" {
-		d = d5 + currentLocale.dateSeparator + d3 + currentLocale.dateSeparator + d1
-	} else if currentLocale.locale == "en-US" {
-		d = d3 + currentLocale.dateSeparator + d5 + currentLocale.dateSeparator + d1
-	}
+
+	d := currentLocale.formatDate(t)
+
 	negative := false
 	cents := entry.Change
 	if cents < 0 {
