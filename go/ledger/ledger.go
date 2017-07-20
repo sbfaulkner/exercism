@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -27,78 +28,42 @@ var currencies = map[string]string{
 }
 
 type localeData struct {
-	locale     string
-	headers    []interface{}
-	dateFormat string
+	locale             string
+	headers            []interface{}
+	dateFormat         string
+	positiveFormat     string
+	negativeFormat     string
+	thousandsSeparator string
 }
 
 func (l localeData) formatCurrency(cents int, currencySymbol string) string {
-	negative := false
+	format := l.positiveFormat
 
 	if cents < 0 {
 		cents *= -1
-		negative = true
+		format = l.negativeFormat
 	}
 
-	centsStr := strconv.Itoa(cents)
-	switch len(centsStr) {
-	case 1:
-		centsStr = "00" + centsStr
-	case 2:
-		centsStr = "0" + centsStr
+	dollars := cents / 100
+
+	var dollarText string
+
+	if dollars > 999 {
+		dollarParts := []string{}
+
+		for dollars > 0 {
+			dollarParts = append([]string{strconv.Itoa(dollars % 1000)}, dollarParts...)
+			dollars /= 1000
+		}
+
+		dollarText = strings.Join(dollarParts, l.thousandsSeparator)
+	} else {
+		dollarText = strconv.Itoa(dollars)
 	}
 
-	rest := centsStr[:len(centsStr)-2]
-	var parts []string
+	cents %= 100
 
-	for len(rest) > 3 {
-		parts = append(parts, rest[len(rest)-3:])
-		rest = rest[:len(rest)-3]
-	}
-
-	if len(rest) > 0 {
-		parts = append(parts, rest)
-	}
-
-	var a string
-
-	if l.locale == "nl-NL" {
-		a += currencySymbol
-		a += " "
-
-		for i := len(parts) - 1; i >= 0; i-- {
-			a += parts[i] + "."
-		}
-		a = a[:len(a)-1]
-		a += ","
-		a += centsStr[len(centsStr)-2:]
-
-		if negative {
-			a += "-"
-		} else {
-			a += " "
-		}
-	} else if l.locale == "en-US" {
-		if negative {
-			a += "("
-		}
-		a += currencySymbol
-
-		for i := len(parts) - 1; i >= 0; i-- {
-			a += parts[i] + ","
-		}
-		a = a[:len(a)-1]
-		a += "."
-		a += centsStr[len(centsStr)-2:]
-
-		if negative {
-			a += ")"
-		} else {
-			a += " "
-		}
-	}
-
-	return a
+	return fmt.Sprintf(format, currencySymbol, dollarText, cents)
 }
 
 func (l localeData) formatDate(t time.Time) string {
@@ -107,14 +72,20 @@ func (l localeData) formatDate(t time.Time) string {
 
 var locales = map[string]localeData{
 	"en-US": {
-		locale:     "en-US",
-		headers:    []interface{}{"Date", "Description", "Change"},
-		dateFormat: "01/02/2006",
+		locale:             "en-US",
+		headers:            []interface{}{"Date", "Description", "Change"},
+		dateFormat:         "01/02/2006",
+		positiveFormat:     "%s%s.%02d ",
+		negativeFormat:     "(%s%s.%02d)",
+		thousandsSeparator: ",",
 	},
 	"nl-NL": {
-		locale:     "nl-NL",
-		headers:    []interface{}{"Datum", "Omschrijving", "Verandering"},
-		dateFormat: "02-01-2006",
+		locale:             "nl-NL",
+		headers:            []interface{}{"Datum", "Omschrijving", "Verandering"},
+		dateFormat:         "02-01-2006",
+		positiveFormat:     "%s %s,%02d ",
+		negativeFormat:     "%s %s,%02d-",
+		thousandsSeparator: ".",
 	},
 }
 
