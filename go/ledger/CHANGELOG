@@ -1,0 +1,15 @@
+2017-07-19 22:49:54 -0400  ledger: initial commit
+2017-07-19 22:57:36 -0400  ledger: simplify allocation
+2017-07-20 09:59:19 -0400  ledger: a few comments to help understand
+2017-07-20 10:07:02 -0400  ledger: extract goroutine to function - for now
+2017-07-20 10:10:41 -0400  ledger: use outputData type in place of explicit structs
+2017-07-20 10:33:35 -0400  ledger: format headers using sprintf
+2017-07-20 14:52:47 -0400  ledger: add currency and locale data with explicit errors
+2017-07-20 16:40:04 -0400  ledger: parse and format dates using locale
+2017-07-20 16:48:27 -0400  ledger: add format string and use sprintf for lines
+2017-07-20 17:15:54 -0400  ledger: extract formatCurrency function
+2017-07-20 17:24:44 -0400  ledger: refactor common code in formatCurrency
+2017-07-20 17:52:48 -0400  ledger: refactor formatCurrency
+2017-07-20 18:03:30 -0400  ledger: replace sorting trick with more obvious condition
+2017-07-20 18:12:52 -0400  ledger: use sort package instead
+2017-07-20 18:58:47 -0400  ledger: add comments and do final cleanup
