@@ -2,6 +2,7 @@ package ledger
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -19,6 +20,8 @@ type outputData struct {
 	s string
 	e error
 }
+
+const formatHeader string = "%-10s | %-25s | %s\n"
 
 func FormatLedger(currency string, locale string, entries []Entry) (string, error) {
 	entriesCopy := make([]Entry, len(entries))
@@ -54,19 +57,9 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 	// declare output string and add (localized) headers (ie. in either Netherlands Dutch or US English)
 	var s string
 	if locale == "nl-NL" {
-		s = "Datum" +
-			strings.Repeat(" ", 10-len("Datum")) +
-			" | " +
-			"Omschrijving" +
-			strings.Repeat(" ", 25-len("Omschrijving")) +
-			" | " + "Verandering" + "\n"
+		s = fmt.Sprintf(formatHeader, "Datum", "Omschrijving", "Verandering")
 	} else if locale == "en-US" {
-		s = "Date" +
-			strings.Repeat(" ", 10-len("Date")) +
-			" | " +
-			"Description" +
-			strings.Repeat(" ", 25-len("Description")) +
-			" | " + "Change" + "\n"
+		s = fmt.Sprintf(formatHeader, "Date", "Description", "Change")
 	} else {
 		return "", errors.New("")
 	}
