@@ -122,20 +122,12 @@ func (e byEntry) Swap(i, j int) {
 
 // Less returns true if an entry is less than the other based on Date, Description and Change in that order
 func (e byEntry) Less(i, j int) bool {
-	if e[i].Date < e[j].Date {
-		return true
+	if e[i].Date != e[j].Date {
+		return e[i].Date < e[j].Date
 	}
 
-	if e[i].Date > e[j].Date {
-		return false
-	}
-
-	if e[i].Description < e[j].Description {
-		return true
-	}
-
-	if e[i].Description > e[j].Description {
-		return false
+	if e[i].Description != e[j].Description {
+		return e[i].Description < e[j].Description
 	}
 
 	return e[i].Change < e[j].Change
