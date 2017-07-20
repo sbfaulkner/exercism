@@ -32,6 +32,83 @@ type localeData struct {
 	dateFormat string
 }
 
+func (l localeData) formatCurrency(cents int, currencySymbol string) string {
+	negative := false
+
+	if cents < 0 {
+		cents *= -1
+		negative = true
+	}
+
+	var a string
+
+	if l.locale == "nl-NL" {
+		a += currencySymbol
+		a += " "
+		centsStr := strconv.Itoa(cents)
+		switch len(centsStr) {
+		case 1:
+			centsStr = "00" + centsStr
+		case 2:
+			centsStr = "0" + centsStr
+		}
+		rest := centsStr[:len(centsStr)-2]
+		var parts []string
+		for len(rest) > 3 {
+			parts = append(parts, rest[len(rest)-3:])
+			rest = rest[:len(rest)-3]
+		}
+		if len(rest) > 0 {
+			parts = append(parts, rest)
+		}
+		for i := len(parts) - 1; i >= 0; i-- {
+			a += parts[i] + "."
+		}
+		a = a[:len(a)-1]
+		a += ","
+		a += centsStr[len(centsStr)-2:]
+		if negative {
+			a += "-"
+		} else {
+			a += " "
+		}
+	} else if l.locale == "en-US" {
+		if negative {
+			a += "("
+		}
+		a += currencySymbol
+		centsStr := strconv.Itoa(cents)
+		switch len(centsStr) {
+		case 1:
+			centsStr = "00" + centsStr
+		case 2:
+			centsStr = "0" + centsStr
+		}
+		rest := centsStr[:len(centsStr)-2]
+		var parts []string
+		for len(rest) > 3 {
+			parts = append(parts, rest[len(rest)-3:])
+			rest = rest[:len(rest)-3]
+		}
+		if len(rest) > 0 {
+			parts = append(parts, rest)
+		}
+		for i := len(parts) - 1; i >= 0; i-- {
+			a += parts[i] + ","
+		}
+		a = a[:len(a)-1]
+		a += "."
+		a += centsStr[len(centsStr)-2:]
+		if negative {
+			a += ")"
+		} else {
+			a += " "
+		}
+	}
+
+	return a
+}
+
 func (l localeData) formatDate(t time.Time) string {
 	return t.Format(l.dateFormat)
 }
@@ -73,7 +150,6 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 	}
 
 	entriesCopy := make([]Entry, len(entries))
-
 	copy(entriesCopy, entries)
 
 	m1 := map[bool]int{true: 0, false: 1}
@@ -129,83 +205,14 @@ func processEntry(i int, entry Entry, co chan outputData, currencySymbol string,
 		co <- outputData{e: ErrInvalidDate}
 	}
 
+	d := currentLocale.formatDate(t)
+
 	de := entry.Description
 	if len(de) > 25 {
 		de = de[:22] + "..."
 	}
 
-	d := currentLocale.formatDate(t)
-
-	negative := false
-	cents := entry.Change
-	if cents < 0 {
-		cents = cents * -1
-		negative = true
-	}
-	var a string
-	if currentLocale.locale == "nl-NL" {
-		a += currencySymbol
-		a += " "
-		centsStr := strconv.Itoa(cents)
-		switch len(centsStr) {
-		case 1:
-			centsStr = "00" + centsStr
-		case 2:
-			centsStr = "0" + centsStr
-		}
-		rest := centsStr[:len(centsStr)-2]
-		var parts []string
-		for len(rest) > 3 {
-			parts = append(parts, rest[len(rest)-3:])
-			rest = rest[:len(rest)-3]
-		}
-		if len(rest) > 0 {
-			parts = append(parts, rest)
-		}
-		for i := len(parts) - 1; i >= 0; i-- {
-			a += parts[i] + "."
-		}
-		a = a[:len(a)-1]
-		a += ","
-		a += centsStr[len(centsStr)-2:]
-		if negative {
-			a += "-"
-		} else {
-			a += " "
-		}
-	} else if currentLocale.locale == "en-US" {
-		if negative {
-			a += "("
-		}
-		a += currencySymbol
-		centsStr := strconv.Itoa(cents)
-		switch len(centsStr) {
-		case 1:
-			centsStr = "00" + centsStr
-		case 2:
-			centsStr = "0" + centsStr
-		}
-		rest := centsStr[:len(centsStr)-2]
-		var parts []string
-		for len(rest) > 3 {
-			parts = append(parts, rest[len(rest)-3:])
-			rest = rest[:len(rest)-3]
-		}
-		if len(rest) > 0 {
-			parts = append(parts, rest)
-		}
-		for i := len(parts) - 1; i >= 0; i-- {
-			a += parts[i] + ","
-		}
-		a = a[:len(a)-1]
-		a += "."
-		a += centsStr[len(centsStr)-2:]
-		if negative {
-			a += ")"
-		} else {
-			a += " "
-		}
-	}
+	a := currentLocale.formatCurrency(entry.Change, currencySymbol)
 
 	co <- outputData{i: i, s: fmt.Sprintf(lineFormat, d, de, a)}
 }
