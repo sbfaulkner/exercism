@@ -13,3 +13,4 @@
 2017-07-20 18:03:30 -0400  ledger: replace sorting trick with more obvious condition
 2017-07-20 18:12:52 -0400  ledger: use sort package instead
 2017-07-20 18:58:47 -0400  ledger: add comments and do final cleanup
+2017-07-20 19:07:16 -0400  ledger: simplify Less function
