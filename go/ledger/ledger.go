@@ -3,6 +3,7 @@ package ledger
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -101,6 +102,36 @@ const (
 	lineFormat   string = "%s | %-25s | %13s\n"
 )
 
+type ByEntry []Entry
+
+func (e ByEntry) Len() int {
+	return len(e)
+}
+
+func (e ByEntry) Swap(i, j int) {
+	e[i], e[j] = e[j], e[i]
+}
+
+func (e ByEntry) Less(i, j int) bool {
+	if e[i].Date < e[j].Date {
+		return true
+	}
+
+	if e[i].Date > e[j].Date {
+		return false
+	}
+
+	if e[i].Description < e[j].Description {
+		return true
+	}
+
+	if e[i].Description > e[j].Description {
+		return false
+	}
+
+	return e[i].Change < e[j].Change
+}
+
 func FormatLedger(currency string, locale string, entries []Entry) (string, error) {
 	currencySymbol, validCurrency := currencies[currency]
 	if !validCurrency {
@@ -114,22 +145,7 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 
 	entriesCopy := make([]Entry, len(entries))
 	copy(entriesCopy, entries)
-
-	es := entriesCopy
-	for len(es) > 1 {
-		first, rest := es[0], es[1:]
-		success := false
-		for !success {
-			success = true
-			for i, e := range rest {
-				if e.Date < first.Date || e.Date == first.Date && (e.Description < first.Description || e.Description == first.Description && e.Change < first.Change) {
-					es[0], es[i+1] = es[i+1], es[0]
-					success = false
-				}
-			}
-		}
-		es = es[1:]
-	}
+	sort.Sort(ByEntry(entriesCopy))
 
 	// declare output string and add (localized) headers (ie. in either Netherlands Dutch or US English)
 	s := fmt.Sprintf(headerFormat, currentLocale.headers...)
