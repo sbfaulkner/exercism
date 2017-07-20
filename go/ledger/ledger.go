@@ -45,6 +45,7 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 		es = es[1:]
 	}
 
+	// declare output string and add (localized) headers (ie. in either Netherlands Dutch or US English)
 	var s string
 	if locale == "nl-NL" {
 		s = "Datum" +
@@ -63,6 +64,7 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 	} else {
 		return "", errors.New("")
 	}
+
 	// Parallelism, always a great idea
 	co := make(chan struct {
 		i int
@@ -213,6 +215,8 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 				strings.Repeat(" ", 13-al) + a + "\n"}
 		}(i, et)
 	}
+
+	// read from channel and insert lines in output collection at the correct index
 	ss := make([]string, len(entriesCopy))
 	for range entriesCopy {
 		v := <-co
@@ -221,8 +225,11 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 		}
 		ss[v.i] = v.s
 	}
+
+	// append lines outpus string `s``
 	for i := 0; i < len(entriesCopy); i++ {
 		s += ss[i]
 	}
+
 	return s, nil
 }
