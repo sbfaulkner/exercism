@@ -40,33 +40,39 @@ func (l localeData) formatCurrency(cents int, currencySymbol string) string {
 		negative = true
 	}
 
+	centsStr := strconv.Itoa(cents)
+	switch len(centsStr) {
+	case 1:
+		centsStr = "00" + centsStr
+	case 2:
+		centsStr = "0" + centsStr
+	}
+
+	rest := centsStr[:len(centsStr)-2]
+	var parts []string
+
+	for len(rest) > 3 {
+		parts = append(parts, rest[len(rest)-3:])
+		rest = rest[:len(rest)-3]
+	}
+
+	if len(rest) > 0 {
+		parts = append(parts, rest)
+	}
+
 	var a string
 
 	if l.locale == "nl-NL" {
 		a += currencySymbol
 		a += " "
-		centsStr := strconv.Itoa(cents)
-		switch len(centsStr) {
-		case 1:
-			centsStr = "00" + centsStr
-		case 2:
-			centsStr = "0" + centsStr
-		}
-		rest := centsStr[:len(centsStr)-2]
-		var parts []string
-		for len(rest) > 3 {
-			parts = append(parts, rest[len(rest)-3:])
-			rest = rest[:len(rest)-3]
-		}
-		if len(rest) > 0 {
-			parts = append(parts, rest)
-		}
+
 		for i := len(parts) - 1; i >= 0; i-- {
 			a += parts[i] + "."
 		}
 		a = a[:len(a)-1]
 		a += ","
 		a += centsStr[len(centsStr)-2:]
+
 		if negative {
 			a += "-"
 		} else {
@@ -77,28 +83,14 @@ func (l localeData) formatCurrency(cents int, currencySymbol string) string {
 			a += "("
 		}
 		a += currencySymbol
-		centsStr := strconv.Itoa(cents)
-		switch len(centsStr) {
-		case 1:
-			centsStr = "00" + centsStr
-		case 2:
-			centsStr = "0" + centsStr
-		}
-		rest := centsStr[:len(centsStr)-2]
-		var parts []string
-		for len(rest) > 3 {
-			parts = append(parts, rest[len(rest)-3:])
-			rest = rest[:len(rest)-3]
-		}
-		if len(rest) > 0 {
-			parts = append(parts, rest)
-		}
+
 		for i := len(parts) - 1; i >= 0; i-- {
 			a += parts[i] + ","
 		}
 		a = a[:len(a)-1]
 		a += "."
 		a += centsStr[len(centsStr)-2:]
+
 		if negative {
 			a += ")"
 		} else {
