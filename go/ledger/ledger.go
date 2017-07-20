@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -57,7 +56,10 @@ var (
 	ErrInvalidLocale   = errors.New("ledger: invalid locale")
 )
 
-const formatHeader string = "%-10s | %-25s | %s\n"
+const (
+	headerFormat string = "%-10s | %-25s | %s\n"
+	lineFormat   string = "%s | %-25s | %13s\n"
+)
 
 func FormatLedger(currency string, locale string, entries []Entry) (string, error) {
 	currencySymbol, validCurrency := currencies[currency]
@@ -95,7 +97,7 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 	}
 
 	// declare output string and add (localized) headers (ie. in either Netherlands Dutch or US English)
-	s := fmt.Sprintf(formatHeader, currentLocale.headers...)
+	s := fmt.Sprintf(headerFormat, currentLocale.headers...)
 
 	// Parallelism, always a great idea
 	co := make(chan outputData)
@@ -130,8 +132,6 @@ func processEntry(i int, entry Entry, co chan outputData, currencySymbol string,
 	de := entry.Description
 	if len(de) > 25 {
 		de = de[:22] + "..."
-	} else {
-		de = de + strings.Repeat(" ", 25-len(de))
 	}
 
 	d := currentLocale.formatDate(t)
@@ -206,10 +206,6 @@ func processEntry(i int, entry Entry, co chan outputData, currencySymbol string,
 			a += " "
 		}
 	}
-	var al int
-	for range a {
-		al++
-	}
-	co <- outputData{i: i, s: d + strings.Repeat(" ", 10-len(d)) + " | " + de + " | " +
-		strings.Repeat(" ", 13-al) + a + "\n"}
+
+	co <- outputData{i: i, s: fmt.Sprintf(lineFormat, d, de, a)}
 }
