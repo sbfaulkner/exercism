@@ -10,44 +10,42 @@ import (
 
 const testVersion = 1
 
-func isSeparator(r rune) bool {
-	return unicode.IsSpace(r) || unicode.IsControl(r)
-}
+type stack []int
 
-func peek(stack *[]int) (value int, err error) {
-	if len(*stack) < 1 {
+func (s *stack) peek() (value int, err error) {
+	if len(*s) < 1 {
 		err = errors.New("empty stack")
 		return
 	}
 
-	return (*stack)[len(*stack)-1], nil
+	return (*s)[len(*s)-1], nil
 }
 
-func pop(stack *[]int) (value int, err error) {
-	value, err = peek(stack)
+func (s *stack) pop() (value int, err error) {
+	value, err = s.peek()
 	if err != nil {
 		return
 	}
 
-	*stack = (*stack)[:len(*stack)-1]
+	*s = (*s)[:len(*s)-1]
 
 	return
 }
 
-func push(stack *[]int, value int) {
-	*stack = append(*stack, value)
+func (s *stack) push(value int) {
+	*s = append(*s, value)
 }
 
-func perform(stack *[]int, f func(x, y int) ([]int, error)) (err error) {
+func (s *stack) perform(f func(x, y int) ([]int, error)) (err error) {
 	var x, y int
 	var result []int
 
-	y, err = pop(stack)
+	y, err = s.pop()
 	if err != nil {
 		return
 	}
 
-	x, err = pop(stack)
+	x, err = s.pop()
 	if err != nil {
 		return
 	}
@@ -58,26 +56,26 @@ func perform(stack *[]int, f func(x, y int) ([]int, error)) (err error) {
 	}
 
 	for _, r := range result {
-		push(stack, r)
+		s.push(r)
 	}
 
 	return
 }
 
-func add(stack *[]int) error {
-	return perform(stack, func(x, y int) ([]int, error) { return []int{x + y}, nil })
+func add(s *stack) error {
+	return s.perform(func(x, y int) ([]int, error) { return []int{x + y}, nil })
 }
 
-func subtract(stack *[]int) error {
-	return perform(stack, func(x, y int) ([]int, error) { return []int{x - y}, nil })
+func subtract(s *stack) error {
+	return s.perform(func(x, y int) ([]int, error) { return []int{x - y}, nil })
 }
 
-func multiply(stack *[]int) error {
-	return perform(stack, func(x, y int) ([]int, error) { return []int{x * y}, nil })
+func multiply(s *stack) error {
+	return s.perform(func(x, y int) ([]int, error) { return []int{x * y}, nil })
 }
 
-func divide(stack *[]int) error {
-	return perform(stack, func(x, y int) ([]int, error) {
+func divide(s *stack) error {
+	return s.perform(func(x, y int) ([]int, error) {
 		if y == 0 {
 			return []int{}, errors.New("divide by zero")
 		}
@@ -86,19 +84,19 @@ func divide(stack *[]int) error {
 	})
 }
 
-func duplicate(stack *[]int) error {
-	value, err := peek(stack)
+func duplicate(s *stack) error {
+	value, err := s.peek()
 	if err != nil {
 		return err
 	}
 
-	push(stack, value)
+	s.push(value)
 
 	return nil
 }
 
-func drop(stack *[]int) error {
-	_, err := pop(stack)
+func drop(s *stack) error {
+	_, err := s.pop()
 	if err != nil {
 		return err
 	}
@@ -106,23 +104,29 @@ func drop(stack *[]int) error {
 	return nil
 }
 
-func swap(stack *[]int) error {
-	return perform(stack, func(x, y int) ([]int, error) {
+func swap(s *stack) error {
+	return s.perform(func(x, y int) ([]int, error) {
 		return []int{y, x}, nil
 	})
 }
 
-func over(stack *[]int) error {
-	return perform(stack, func(x, y int) ([]int, error) {
+func over(s *stack) error {
+	return s.perform(func(x, y int) ([]int, error) {
 		return []int{x, y, x}, nil
 	})
 }
 
+func isSeparator(r rune) bool {
+	return unicode.IsSpace(r) || unicode.IsControl(r)
+}
+
+type stackFn func(*stack) error
+
 // Forth evaluates a slice of input strings and returns the resulting stack as a slice of ints
 func Forth(input []string) ([]int, error) {
-	stack := []int{}
+	s := stack{}
 
-	dictionary := map[string]func(stack *[]int) error{
+	dictionary := map[string]stackFn{
 		"+":    add,
 		"-":    subtract,
 		"*":    multiply,
@@ -136,8 +140,8 @@ func Forth(input []string) ([]int, error) {
 	for _, l := range input {
 		for _, w := range strings.FieldsFunc(l, isSeparator) {
 			if f := dictionary[strings.ToUpper(w)]; f != nil {
-				if err := f(&stack); err != nil {
-					return stack, err
+				if err := f(&s); err != nil {
+					return s, err
 				}
 			} else {
 				i, err := strconv.ParseInt(w, 10, 0)
@@ -146,10 +150,10 @@ func Forth(input []string) ([]int, error) {
 					continue
 				}
 
-				stack = append(stack, int(i))
+				s.push(int(i))
 			}
 		}
 	}
 
-	return stack, nil
+	return s, nil
 }
