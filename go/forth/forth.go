@@ -122,26 +122,32 @@ func isSeparator(r rune) bool {
 
 type stackFn func(*stack) error
 
+type evaluator struct {
+	data stack
+	dict map[string]stackFn
+}
+
 // Forth evaluates a slice of input strings and returns the resulting stack as a slice of ints
 func Forth(input []string) ([]int, error) {
-	s := stack{}
-
-	dictionary := map[string]stackFn{
-		"+":    add,
-		"-":    subtract,
-		"*":    multiply,
-		"/":    divide,
-		"DUP":  duplicate,
-		"DROP": drop,
-		"SWAP": swap,
-		"OVER": over,
+	e := evaluator{
+		data: stack{},
+		dict: map[string]stackFn{
+			"+":    add,
+			"-":    subtract,
+			"*":    multiply,
+			"/":    divide,
+			"DUP":  duplicate,
+			"DROP": drop,
+			"SWAP": swap,
+			"OVER": over,
+		},
 	}
 
 	for _, l := range input {
 		for _, w := range strings.FieldsFunc(l, isSeparator) {
-			if f := dictionary[strings.ToUpper(w)]; f != nil {
-				if err := f(&s); err != nil {
-					return s, err
+			if fn := e.dict[strings.ToUpper(w)]; fn != nil {
+				if err := fn(&e.data); err != nil {
+					return e.data, err
 				}
 			} else {
 				i, err := strconv.ParseInt(w, 10, 0)
@@ -150,10 +156,10 @@ func Forth(input []string) ([]int, error) {
 					continue
 				}
 
-				s.push(int(i))
+				e.data.push(int(i))
 			}
 		}
 	}
 
-	return s, nil
+	return e.data, nil
 }
