@@ -2,7 +2,6 @@ package forth
 
 import (
 	"errors"
-	"log"
 	"strconv"
 	"strings"
 	"unicode"
@@ -127,9 +126,8 @@ type evaluator struct {
 	dict map[string]stackFn
 }
 
-// Forth evaluates a slice of input strings and returns the resulting stack as a slice of ints
-func Forth(input []string) ([]int, error) {
-	e := evaluator{
+func newEvaluator() *evaluator {
+	return &evaluator{
 		data: stack{},
 		dict: map[string]stackFn{
 			"+":    add,
@@ -142,21 +140,33 @@ func Forth(input []string) ([]int, error) {
 			"OVER": over,
 		},
 	}
+}
 
-	for _, l := range input {
-		for _, w := range strings.FieldsFunc(l, isSeparator) {
-			if fn := e.dict[strings.ToUpper(w)]; fn != nil {
-				if err := fn(&e.data); err != nil {
-					return e.data, err
-				}
-			} else {
-				i, err := strconv.ParseInt(w, 10, 0)
-				if err != nil {
-					log.Println(err.Error())
-					continue
-				}
+func (e *evaluator) evaluate(word string) error {
+	if fn := e.dict[strings.ToUpper(word)]; fn != nil {
+		if err := fn(&e.data); err != nil {
+			return err
+		}
+	} else {
+		value, err := strconv.ParseInt(word, 10, 0)
+		if err != nil {
+			return err
+		}
 
-				e.data.push(int(i))
+		e.data.push(int(value))
+	}
+
+	return nil
+}
+
+// Forth evaluates a slice of input strings and returns the resulting stack as a slice of ints
+func Forth(input []string) ([]int, error) {
+	e := newEvaluator()
+
+	for _, line := range input {
+		for _, word := range strings.FieldsFunc(line, isSeparator) {
+			if err := e.evaluate(word); err != nil {
+				return []int{}, err
 			}
 		}
 	}
