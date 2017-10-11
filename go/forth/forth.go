@@ -9,127 +9,17 @@ import (
 
 const testVersion = 1
 
-type stack []int
-
-func (s *stack) peek() (value int, err error) {
-	if len(*s) < 1 {
-		err = errors.New("empty stack")
-		return
-	}
-
-	return (*s)[len(*s)-1], nil
-}
-
-func (s *stack) pop() (value int, err error) {
-	value, err = s.peek()
-	if err != nil {
-		return
-	}
-
-	*s = (*s)[:len(*s)-1]
-
-	return
-}
-
-func (s *stack) push(value int) {
-	*s = append(*s, value)
-}
-
-func (s *stack) perform(f func(x, y int) ([]int, error)) (err error) {
-	var x, y int
-	var result []int
-
-	y, err = s.pop()
-	if err != nil {
-		return
-	}
-
-	x, err = s.pop()
-	if err != nil {
-		return
-	}
-
-	result, err = f(x, y)
-	if err != nil {
-		return
-	}
-
-	for _, r := range result {
-		s.push(r)
-	}
-
-	return
-}
-
-func add(s *stack) error {
-	return s.perform(func(x, y int) ([]int, error) { return []int{x + y}, nil })
-}
-
-func subtract(s *stack) error {
-	return s.perform(func(x, y int) ([]int, error) { return []int{x - y}, nil })
-}
-
-func multiply(s *stack) error {
-	return s.perform(func(x, y int) ([]int, error) { return []int{x * y}, nil })
-}
-
-func divide(s *stack) error {
-	return s.perform(func(x, y int) ([]int, error) {
-		if y == 0 {
-			return []int{}, errors.New("divide by zero")
-		}
-
-		return []int{x / y}, nil
-	})
-}
-
-func duplicate(s *stack) error {
-	value, err := s.peek()
-	if err != nil {
-		return err
-	}
-
-	s.push(value)
-
-	return nil
-}
-
-func drop(s *stack) error {
-	_, err := s.pop()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func swap(s *stack) error {
-	return s.perform(func(x, y int) ([]int, error) {
-		return []int{y, x}, nil
-	})
-}
-
-func over(s *stack) error {
-	return s.perform(func(x, y int) ([]int, error) {
-		return []int{x, y, x}, nil
-	})
-}
-
-func isSeparator(r rune) bool {
-	return unicode.IsSpace(r) || unicode.IsControl(r)
-}
-
-type stackFn func(*stack) error
+type evalFn func(*evaluator) error
 
 type evaluator struct {
-	data stack
-	dict map[string]stackFn
+	data []int
+	dict map[string]evalFn
 }
 
 func newEvaluator() *evaluator {
 	return &evaluator{
-		data: stack{},
-		dict: map[string]stackFn{
+		data: []int{},
+		dict: map[string]evalFn{
 			"+":    add,
 			"-":    subtract,
 			"*":    multiply,
@@ -142,9 +32,117 @@ func newEvaluator() *evaluator {
 	}
 }
 
+func (e *evaluator) peek() (value int, err error) {
+	if len(e.data) < 1 {
+		err = errors.New("empty stack")
+		return
+	}
+
+	return e.data[len(e.data)-1], nil
+}
+
+func (e *evaluator) pop() (value int, err error) {
+	value, err = e.peek()
+	if err != nil {
+		return
+	}
+
+	e.data = e.data[:len(e.data)-1]
+
+	return
+}
+
+func (e *evaluator) push(value int) {
+	e.data = append(e.data, value)
+}
+
+func (e *evaluator) perform(f func(x, y int) ([]int, error)) (err error) {
+	var x, y int
+	var result []int
+
+	y, err = e.pop()
+	if err != nil {
+		return
+	}
+
+	x, err = e.pop()
+	if err != nil {
+		return
+	}
+
+	result, err = f(x, y)
+	if err != nil {
+		return
+	}
+
+	for _, r := range result {
+		e.push(r)
+	}
+
+	return
+}
+
+func add(e *evaluator) error {
+	return e.perform(func(x, y int) ([]int, error) { return []int{x + y}, nil })
+}
+
+func subtract(e *evaluator) error {
+	return e.perform(func(x, y int) ([]int, error) { return []int{x - y}, nil })
+}
+
+func multiply(e *evaluator) error {
+	return e.perform(func(x, y int) ([]int, error) { return []int{x * y}, nil })
+}
+
+func divide(e *evaluator) error {
+	return e.perform(func(x, y int) ([]int, error) {
+		if y == 0 {
+			return []int{}, errors.New("divide by zero")
+		}
+
+		return []int{x / y}, nil
+	})
+}
+
+func duplicate(e *evaluator) error {
+	value, err := e.peek()
+	if err != nil {
+		return err
+	}
+
+	e.push(value)
+
+	return nil
+}
+
+func drop(e *evaluator) error {
+	_, err := e.pop()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func swap(e *evaluator) error {
+	return e.perform(func(x, y int) ([]int, error) {
+		return []int{y, x}, nil
+	})
+}
+
+func over(e *evaluator) error {
+	return e.perform(func(x, y int) ([]int, error) {
+		return []int{x, y, x}, nil
+	})
+}
+
+func isSeparator(r rune) bool {
+	return unicode.IsSpace(r) || unicode.IsControl(r)
+}
+
 func (e *evaluator) evaluate(word string) error {
 	if fn := e.dict[strings.ToUpper(word)]; fn != nil {
-		if err := fn(&e.data); err != nil {
+		if err := fn(e); err != nil {
 			return err
 		}
 	} else {
@@ -153,7 +151,7 @@ func (e *evaluator) evaluate(word string) error {
 			return err
 		}
 
-		e.data.push(int(value))
+		e.push(int(value))
 	}
 
 	return nil
