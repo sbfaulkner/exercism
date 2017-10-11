@@ -136,10 +136,6 @@ func over(e *evaluator) error {
 	})
 }
 
-func isSeparator(r rune) bool {
-	return unicode.IsSpace(r) || unicode.IsControl(r)
-}
-
 func (e *evaluator) evaluate(word string) error {
 	if fn := e.dict[strings.ToUpper(word)]; fn != nil {
 		if err := fn(e); err != nil {
@@ -159,6 +155,8 @@ func (e *evaluator) evaluate(word string) error {
 
 // Forth evaluates a slice of input strings and returns the resulting stack as a slice of ints
 func Forth(input []string) ([]int, error) {
+	isSeparator := func(r rune) bool { return unicode.IsSpace(r) || unicode.IsControl(r) }
+
 	e := newEvaluator()
 
 	for _, line := range input {
