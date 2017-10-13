@@ -12,13 +12,15 @@ const testVersion = 1
 type evalFn func(*evaluator) error
 
 type evaluator struct {
-	data []int
-	dict map[string]evalFn
+	words chan string
+	data  []int
+	dict  map[string]evalFn
 }
 
-func newEvaluator() *evaluator {
-	return &evaluator{
-		data: []int{},
+func newEvaluator(input []string) *evaluator {
+	e := evaluator{
+		words: make(chan string, 2),
+		data:  []int{},
 		dict: map[string]evalFn{
 			"+":    add,
 			"-":    subtract,
@@ -30,6 +32,22 @@ func newEvaluator() *evaluator {
 			"OVER": over,
 		},
 	}
+
+	go e.parse(input)
+
+	return &e
+}
+
+func (e *evaluator) parse(input []string) {
+	isSeparator := func(r rune) bool { return unicode.IsSpace(r) || unicode.IsControl(r) }
+
+	for _, line := range input {
+		for _, word := range strings.FieldsFunc(line, isSeparator) {
+			e.words <- strings.ToUpper(word)
+		}
+	}
+
+	close(e.words)
 }
 
 func (e *evaluator) peek() (value int, err error) {
@@ -136,18 +154,25 @@ func over(e *evaluator) error {
 	})
 }
 
-func (e *evaluator) evaluate(word string) error {
-	if fn := e.dict[strings.ToUpper(word)]; fn != nil {
-		if err := fn(e); err != nil {
-			return err
-		}
-	} else {
-		value, err := strconv.ParseInt(word, 10, 0)
-		if err != nil {
-			return err
+func (e *evaluator) evaluate() error {
+	for {
+		word := <-e.words
+		if word == "" {
+			break
 		}
 
-		e.push(int(value))
+		if fn := e.dict[word]; fn != nil {
+			if err := fn(e); err != nil {
+				return err
+			}
+		} else {
+			value, err := strconv.ParseInt(word, 10, 0)
+			if err != nil {
+				return err
+			}
+
+			e.push(int(value))
+		}
 	}
 
 	return nil
@@ -155,16 +180,11 @@ func (e *evaluator) evaluate(word string) error {
 
 // Forth evaluates a slice of input strings and returns the resulting stack as a slice of ints
 func Forth(input []string) ([]int, error) {
-	isSeparator := func(r rune) bool { return unicode.IsSpace(r) || unicode.IsControl(r) }
+	e := newEvaluator(input)
 
-	e := newEvaluator()
-
-	for _, line := range input {
-		for _, word := range strings.FieldsFunc(line, isSeparator) {
-			if err := e.evaluate(word); err != nil {
-				return []int{}, err
-			}
-		}
+	err := e.evaluate()
+	if err != nil {
+		return []int{}, err
 	}
 
 	return e.data, nil
