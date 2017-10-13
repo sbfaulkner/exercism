@@ -2,7 +2,6 @@ package forth
 
 import (
 	"errors"
-	"log"
 	"strconv"
 	"strings"
 	"unicode"
@@ -10,11 +9,16 @@ import (
 
 const testVersion = 1
 
-type evalFn func(*evaluator) error
+var (
+	errDivideByZero = errors.New("divide by zero")
+	errEmptyStack   = errors.New("empty stack")
+)
+
+type evalFn func(*evaluator, []string) error
 
 type entry struct {
-	fn   evalFn
-	code []string
+	fn     evalFn
+	params []string
 }
 
 type evaluator struct {
@@ -57,58 +61,49 @@ func (e *evaluator) parse(input []string) {
 	close(e.words)
 }
 
-func (e *evaluator) peek() (value int, err error) {
+func (e *evaluator) peek() (int, error) {
 	if len(e.data) < 1 {
-		err = errors.New("empty stack")
-		return
+		return 0, errEmptyStack
 	}
 
 	return e.data[len(e.data)-1], nil
 }
 
-func (e *evaluator) pop() (value int, err error) {
-	value, err = e.peek()
+func (e *evaluator) pop() (int, error) {
+	i, err := e.peek()
 	if err != nil {
-		return
+		return 0, err
 	}
 
 	e.data = e.data[:len(e.data)-1]
 
-	return
+	return i, nil
 }
 
-func (e *evaluator) push(value int) {
-	e.data = append(e.data, value)
+func (e *evaluator) pop2() (int, int, error) {
+	var i, j int
+	var err error
+
+	j, err = e.pop()
+	if err != nil {
+		return 0, 0, err
+	}
+
+	i, err = e.pop()
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return i, j, nil
 }
 
-func (e *evaluator) perform(f func(x, y int) ([]int, error)) (err error) {
-	var x, y int
-	var result []int
-
-	y, err = e.pop()
-	if err != nil {
-		return
-	}
-
-	x, err = e.pop()
-	if err != nil {
-		return
-	}
-
-	result, err = f(x, y)
-	if err != nil {
-		return
-	}
-
-	for _, r := range result {
-		e.push(r)
-	}
-
-	return
+func (e *evaluator) push(i int) {
+	e.data = append(e.data, i)
 }
 
-func define(e *evaluator) error {
+func define(e *evaluator, _ []string) error {
 	name := <-e.words
+	code := []string{}
 
 	for {
 		word := <-e.words
@@ -116,47 +111,84 @@ func define(e *evaluator) error {
 			break
 		}
 
-		log.Println(name, "+", word)
-		// e.dict[word]
+		code = append(code, word)
+	}
+
+	e.dict[name] = entry{fn: execute, params: code}
+
+	return nil
+}
+
+func execute(e *evaluator, code []string) error {
+	for _, word := range code {
+		if err := e.evaluate(word); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func add(e *evaluator) error {
-	return e.perform(func(x, y int) ([]int, error) { return []int{x + y}, nil })
-}
-
-func subtract(e *evaluator) error {
-	return e.perform(func(x, y int) ([]int, error) { return []int{x - y}, nil })
-}
-
-func multiply(e *evaluator) error {
-	return e.perform(func(x, y int) ([]int, error) { return []int{x * y}, nil })
-}
-
-func divide(e *evaluator) error {
-	return e.perform(func(x, y int) ([]int, error) {
-		if y == 0 {
-			return []int{}, errors.New("divide by zero")
-		}
-
-		return []int{x / y}, nil
-	})
-}
-
-func duplicate(e *evaluator) error {
-	value, err := e.peek()
+func add(e *evaluator, _ []string) error {
+	i, j, err := e.pop2()
 	if err != nil {
 		return err
 	}
 
-	e.push(value)
+	e.push(i + j)
 
 	return nil
 }
 
-func drop(e *evaluator) error {
+func subtract(e *evaluator, _ []string) error {
+	i, j, err := e.pop2()
+	if err != nil {
+		return err
+	}
+
+	e.push(i - j)
+
+	return nil
+}
+
+func multiply(e *evaluator, _ []string) error {
+	i, j, err := e.pop2()
+	if err != nil {
+		return err
+	}
+
+	e.push(i * j)
+
+	return nil
+}
+
+func divide(e *evaluator, _ []string) error {
+	i, j, err := e.pop2()
+	if err != nil {
+		return err
+	}
+
+	if j == 0 {
+		return errDivideByZero
+	}
+
+	e.push(i / j)
+
+	return nil
+}
+
+func duplicate(e *evaluator, _ []string) error {
+	i, err := e.peek()
+	if err != nil {
+		return err
+	}
+
+	e.push(i)
+
+	return nil
+}
+
+func drop(e *evaluator, _ []string) error {
 	_, err := e.pop()
 	if err != nil {
 		return err
@@ -165,36 +197,62 @@ func drop(e *evaluator) error {
 	return nil
 }
 
-func swap(e *evaluator) error {
-	return e.perform(func(x, y int) ([]int, error) {
-		return []int{y, x}, nil
-	})
+func swap(e *evaluator, _ []string) error {
+	i, j, err := e.pop2()
+	if err != nil {
+		return err
+	}
+
+	e.push(j)
+	e.push(i)
+
+	return nil
 }
 
-func over(e *evaluator) error {
-	return e.perform(func(x, y int) ([]int, error) {
-		return []int{x, y, x}, nil
-	})
+func over(e *evaluator, _ []string) error {
+	i, err := e.pop()
+	if err != nil {
+		return err
+	}
+
+	j, err := e.peek()
+	if err != nil {
+		return err
+	}
+
+	e.push(i)
+	e.push(j)
+
+	return nil
 }
 
-func (e *evaluator) evaluate() error {
+func (e *evaluator) evaluate(word string) error {
+	if entry, ok := e.dict[word]; ok {
+		err := entry.fn(e, entry.params)
+		if err != nil {
+			return err
+		}
+	} else {
+		value, err := strconv.ParseInt(word, 10, 0)
+		if err != nil {
+			return err
+		}
+
+		e.push(int(value))
+	}
+
+	return nil
+}
+
+func (e *evaluator) run() error {
 	for {
 		word := <-e.words
 		if word == "" {
 			break
 		}
 
-		if entry, ok := e.dict[word]; ok {
-			if err := entry.fn(e); err != nil {
-				return err
-			}
-		} else {
-			value, err := strconv.ParseInt(word, 10, 0)
-			if err != nil {
-				return err
-			}
-
-			e.push(int(value))
+		if err := e.evaluate(word); err != nil {
+			return err
 		}
 	}
 
@@ -205,7 +263,7 @@ func (e *evaluator) evaluate() error {
 func Forth(input []string) ([]int, error) {
 	e := newEvaluator(input)
 
-	err := e.evaluate()
+	err := e.run()
 	if err != nil {
 		return []int{}, err
 	}
