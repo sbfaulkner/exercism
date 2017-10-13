@@ -10,8 +10,9 @@ import (
 const testVersion = 1
 
 var (
-	errDivideByZero = errors.New("divide by zero")
-	errEmptyStack   = errors.New("empty stack")
+	errDivideByZero         = errors.New("divide by zero")
+	errEmptyStack           = errors.New("empty stack")
+	errCannotRedefineNumber = errors.New("cannot redefine number")
 )
 
 type evalFn func(*evaluator, []string) error
@@ -111,6 +112,11 @@ func (e *evaluator) emit(word string) {
 
 func define(e *evaluator, _ []string) error {
 	name := e.next()
+	_, err := strconv.ParseInt(name, 10, 0)
+	if err == nil {
+		return errCannotRedefineNumber
+	}
+
 	code := []string{}
 
 	for {
