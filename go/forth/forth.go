@@ -2,6 +2,7 @@ package forth
 
 import (
 	"errors"
+	"log"
 	"strconv"
 	"strings"
 	"unicode"
@@ -11,25 +12,31 @@ const testVersion = 1
 
 type evalFn func(*evaluator) error
 
+type entry struct {
+	fn   evalFn
+	code []string
+}
+
 type evaluator struct {
 	words chan string
 	data  []int
-	dict  map[string]evalFn
+	dict  map[string]entry
 }
 
 func newEvaluator(input []string) *evaluator {
 	e := evaluator{
 		words: make(chan string, 2),
 		data:  []int{},
-		dict: map[string]evalFn{
-			"+":    add,
-			"-":    subtract,
-			"*":    multiply,
-			"/":    divide,
-			"DUP":  duplicate,
-			"DROP": drop,
-			"SWAP": swap,
-			"OVER": over,
+		dict: map[string]entry{
+			":":    {fn: define},
+			"+":    {fn: add},
+			"-":    {fn: subtract},
+			"*":    {fn: multiply},
+			"/":    {fn: divide},
+			"DUP":  {fn: duplicate},
+			"DROP": {fn: drop},
+			"SWAP": {fn: swap},
+			"OVER": {fn: over},
 		},
 	}
 
@@ -100,6 +107,22 @@ func (e *evaluator) perform(f func(x, y int) ([]int, error)) (err error) {
 	return
 }
 
+func define(e *evaluator) error {
+	name := <-e.words
+
+	for {
+		word := <-e.words
+		if word == ";" {
+			break
+		}
+
+		log.Println(name, "+", word)
+		// e.dict[word]
+	}
+
+	return nil
+}
+
 func add(e *evaluator) error {
 	return e.perform(func(x, y int) ([]int, error) { return []int{x + y}, nil })
 }
@@ -161,8 +184,8 @@ func (e *evaluator) evaluate() error {
 			break
 		}
 
-		if fn := e.dict[word]; fn != nil {
-			if err := fn(e); err != nil {
+		if entry, ok := e.dict[word]; ok {
+			if err := entry.fn(e); err != nil {
 				return err
 			}
 		} else {
