@@ -54,7 +54,7 @@ func (e *evaluator) parse(input []string) {
 
 	for _, line := range input {
 		for _, word := range strings.FieldsFunc(line, isSeparator) {
-			e.words <- strings.ToUpper(word)
+			e.emit(word)
 		}
 	}
 
@@ -101,12 +101,20 @@ func (e *evaluator) push(i int) {
 	e.data = append(e.data, i)
 }
 
+func (e *evaluator) next() string {
+	return <-e.words
+}
+
+func (e *evaluator) emit(word string) {
+	e.words <- strings.ToUpper(word)
+}
+
 func define(e *evaluator, _ []string) error {
-	name := <-e.words
+	name := e.next()
 	code := []string{}
 
 	for {
-		word := <-e.words
+		word := e.next()
 		if word == ";" {
 			break
 		}
@@ -246,7 +254,7 @@ func (e *evaluator) evaluate(word string) error {
 
 func (e *evaluator) run() error {
 	for {
-		word := <-e.words
+		word := e.next()
 		if word == "" {
 			break
 		}
