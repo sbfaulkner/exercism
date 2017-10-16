@@ -143,52 +143,41 @@ func execute(e *evaluator, code []string) error {
 	return nil
 }
 
-func add(e *evaluator, _ []string) error {
+func (e *evaluator) performBinaryOperation(op func(i, j int) (int, error)) error {
 	i, j, err := e.pop2()
 	if err != nil {
 		return err
 	}
 
-	e.push(i + j)
+	k, err := op(i, j)
+	if err != nil {
+		return err
+	}
+
+	e.push(k)
 
 	return nil
+}
+
+func add(e *evaluator, _ []string) error {
+	return e.performBinaryOperation(func(i, j int) (int, error) { return i + j, nil })
 }
 
 func subtract(e *evaluator, _ []string) error {
-	i, j, err := e.pop2()
-	if err != nil {
-		return err
-	}
-
-	e.push(i - j)
-
-	return nil
+	return e.performBinaryOperation(func(i, j int) (int, error) { return i - j, nil })
 }
 
 func multiply(e *evaluator, _ []string) error {
-	i, j, err := e.pop2()
-	if err != nil {
-		return err
-	}
-
-	e.push(i * j)
-
-	return nil
+	return e.performBinaryOperation(func(i, j int) (int, error) { return i * j, nil })
 }
 
 func divide(e *evaluator, _ []string) error {
-	i, j, err := e.pop2()
-	if err != nil {
-		return err
-	}
-
-	if j == 0 {
-		return errDivideByZero
-	}
-
-	e.push(i / j)
-
-	return nil
+	return e.performBinaryOperation(func(i, j int) (int, error) {
+		if j == 0 {
+			return 0, errDivideByZero
+		}
+		return i / j, nil
+	})
 }
 
 func duplicate(e *evaluator, _ []string) error {
