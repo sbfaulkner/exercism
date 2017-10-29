@@ -1,15 +1,15 @@
 # Raindrops converts a number to raindrop-speak.
 module Raindrops
+  FACTORS = [
+    [3, 'Pling'],
+    [5, 'Plang'],
+    [7, 'Plong'],
+  ]
+
   def self.convert(number)
-    raindrop = ''
-
-    raindrop << 'Pling' if (number % 3).zero?
-    raindrop << 'Plang' if (number % 5).zero?
-    raindrop << 'Plong' if (number % 7).zero?
-
-    raindrop = number.to_s if raindrop.empty?
-
-    raindrop
+    text = FACTORS.map { |f, w| w if (number % f).zero? }.compact.join
+    return number.to_s if text.empty?
+    text
   end
 end
 
