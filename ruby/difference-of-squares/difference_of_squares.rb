@@ -11,7 +11,7 @@ class Squares
 
   # square_of_sum calculates the sum of the squares of the terms in the series
   def sum_of_squares
-    @range.map { |n| n**2 }.sum
+    @range.sum { |n| n**2 }
   end
 
   # difference calculates the difference between
