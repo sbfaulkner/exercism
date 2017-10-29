@@ -1,17 +1,17 @@
 # Squares defines methods to calculate the Difference Of Squares
 class Squares
   def initialize(number)
-    @number = number
+    @range = 1..number
   end
 
   # square_of_sum calculates the square of the sum the terms in the series
   def square_of_sum
-    (1..@number).sum**2
+    @range.sum**2
   end
 
   # square_of_sum calculates the sum of the squares of the terms in the series
   def sum_of_squares
-    (1..@number).map { |n| n**2 }.sum
+    @range.map { |n| n**2 }.sum
   end
 
   # difference calculates the difference between
