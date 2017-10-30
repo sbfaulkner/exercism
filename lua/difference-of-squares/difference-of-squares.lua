@@ -5,13 +5,7 @@ function diff.square_of_sums(max)
 end
 
 function diff.sum_of_squares(max)
-  sum = 0
-
-  for i = 1, max do
-    sum = sum + i^2
-  end
-
-  return sum
+  return max * (max + 1) * (2 * max + 1) / 6
 end
 
 function diff.difference_of_squares(max)
