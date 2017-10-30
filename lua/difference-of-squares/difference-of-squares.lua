@@ -1,20 +1,14 @@
 local diff = {}
 
 function diff.square_of_sums(max)
-  sum = 0
-
-  for i = 1, max do
-    sum = sum + i
-  end
-
-  return sum*sum
+  return (max * (max + 1) / 2)^2
 end
 
 function diff.sum_of_squares(max)
   sum = 0
 
   for i = 1, max do
-    sum = sum + i*i
+    sum = sum + i^2
   end
 
   return sum
