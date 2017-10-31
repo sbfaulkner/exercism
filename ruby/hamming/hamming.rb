@@ -1,10 +1,10 @@
 # Hamming module to determine distance between two DNA strands
 module Hamming
-  def self.compute(s1, s2)
-    raise ArgumentError, 'strand lengths not equal' unless s1.length == s2.length
+  def self.compute(strand1, strand2)
+    raise ArgumentError, 'strand lengths not equal' unless strand1.length == strand2.length
 
-    s1.chars.zip(s2.chars).count do |n1, n2|
-      n1 != n2
+    strand1.chars.zip(strand2.chars).count do |nucleotide1, nucleotide2|
+      nucleotide1 != nucleotide2
     end
   end
 end
