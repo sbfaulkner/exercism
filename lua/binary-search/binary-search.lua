@@ -1,17 +1,17 @@
 return function(array, target)
-  local l = 1
-  local r = #array
+  local left = 1
+  local right = #array
 
-  while l <= r do
-    local m = math.floor((l+r)/2)
-    local am = array[m]
+  while left <= right do
+    local mid = math.floor((left+right)/2)
+    local value = array[mid]
 
-    if am < target then
-      l = m + 1
-    elseif am > target then
-      r = m - 1
+    if value < target then
+      left = mid + 1
+    elseif value > target then
+      right = mid - 1
     else
-      return m
+      return mid
     end
   end
 
