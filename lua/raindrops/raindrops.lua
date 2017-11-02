@@ -4,8 +4,8 @@ local factors = {
   { factor = 7, sound = "Plong" },
 }
 
-function raindrops(number)
-  text = ''
+return function (number)
+  local text = ''
 
   for _, f in ipairs(factors) do
     if (number % f.factor) == 0 then text = text .. f.sound end
@@ -13,5 +13,3 @@ function raindrops(number)
 
   return #text > 0 and text or tostring(number)
 end
-
-return raindrops
