@@ -32,7 +32,7 @@ local actions = {
 
 -- verse() returns the specified verse.
 function house.verse(number)
-  text = 'This is the ' .. objects[number]
+  local text = 'This is the ' .. objects[number]
 
   while number > 1 do
     text = text .. '\nthat ' .. actions[number]
@@ -45,7 +45,7 @@ end
 
 -- recite() returns the entire song.
 function house.recite()
-  verses = {}
+  local verses = {}
 
   for i = 1, #objects do
     verses[#verses+1] = house.verse(i)
