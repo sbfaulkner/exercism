@@ -34,10 +34,8 @@ local actions = {
 function house.verse(number)
   local text = 'This is the ' .. objects[number]
 
-  while number > 1 do
-    text = text .. '\nthat ' .. actions[number]
-    number = number - 1
-    text = text .. ' the ' .. objects[number]
+  for n = number, 2, -1 do
+    text = text .. '\nthat ' .. actions[n] .. ' the ' .. objects[n-1]
   end
 
   return text
