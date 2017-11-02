@@ -1,4 +1,4 @@
-function word_count(phrase)
+local function word_count(phrase)
   local words = {}
 
   for word in phrase:lower():gmatch("%w+") do
