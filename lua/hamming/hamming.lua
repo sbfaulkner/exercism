@@ -1,13 +1,13 @@
 local hamming = {}
 
 -- compute() returns the Hamming distance between the two DNS strands
-function hamming.compute(s1, s2)
-  if s1:len() ~= s2:len() then return -1 end
+function hamming.compute(strand1, strand2)
+  if #strand1 ~= #strand2 then return -1 end
 
-  distance = 0
+  local distance = 0
 
-  for i = 1, #s1 do
-    if s1:sub(i, i) ~= s2:sub(i, i) then distance = distance + 1 end
+  for i = 1, #strand1 do
+    if strand1:sub(i, i) ~= strand2:sub(i, i) then distance = distance + 1 end
   end
 
   return distance
