@@ -1,8 +1,8 @@
-declare -A factors
-
-factors[3]=Pling
-factors[5]=Plang
-factors[7]=Plong
+declare -A factors=(
+  [3]=Pling
+  [5]=Plang
+  [7]=Plong
+)
 
 number=$1
 
