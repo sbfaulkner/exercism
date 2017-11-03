@@ -10,12 +10,8 @@ class Sieve
     while c = candidates.first
       @primes << c
 
-      i = c
-
-      while i <= limit
+      (c..limit).step(c) do |i|
         candidates.delete(i)
-
-        i += c
       end
     end
   end
