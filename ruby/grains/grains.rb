@@ -8,7 +8,7 @@ module Grains
   end
 
   def self.total
-    SQUARES.sum { |i| square(i) }
+    2**SQUARES.last - 1
   end
 end
 
