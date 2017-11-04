@@ -27,15 +27,12 @@ FLAG=$2
 
 case $FLAG in
 -S)
-  let SQUARE=$(square_of_the_sum $N)
-  echo $SQUARE
+  echo $(square_of_the_sum $N)
   ;;
 -s)
-  let SUM=$(sum_of_the_squares $N)
-  echo $SUM
+  echo $(sum_of_the_squares $N)
   ;;
 *)
-  let DIFFERENCE=$(square_of_the_sum $N)-$(sum_of_the_squares $N)
-  echo $DIFFERENCE
+  echo $(( $(square_of_the_sum $N) - $(sum_of_the_squares $N) ))
   ;;
 esac
