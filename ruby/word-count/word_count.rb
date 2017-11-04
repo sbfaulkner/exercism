@@ -4,8 +4,8 @@ class Phrase
   end
 
   def word_count
-    @phrase.split(/[^\w']+/).each_with_object(Hash.new(0)) do |word, words|
-      words[word.sub(/\A'(.+)'\z/, '\1').downcase] += 1
+    @phrase.downcase.scan(/\b[\w']+\b/).each_with_object(Hash.new(0)) do |word, words|
+      words[word] += 1
     end
   end
 end
