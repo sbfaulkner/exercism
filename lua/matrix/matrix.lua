@@ -1,17 +1,15 @@
 return function (text)
   local matrix = {}
 
-  text:gsub('([^\n]+)', function (line)
+  for line in text:gmatch('[^\n]+') do
     local row = {}
 
-    line:gsub('([^%s]+)', function (cell)
+    for cell in line:gmatch('[^%s]+') do
       row[#row+1] = tonumber(cell)
-      return ''
-    end)
+    end
 
     matrix[#matrix+1] = row
-    return ''
-  end)
+  end
 
   local function row(r)
     return matrix[r]
