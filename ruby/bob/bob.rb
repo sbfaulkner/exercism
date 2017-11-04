@@ -1,13 +1,33 @@
 # Bob simulates a lackadaisical teenager.
 module Bob
-  def self.hey(remark)
-    remark.strip!
+  # Remark recognizes different types of remarks.
+  class Remark
+    require 'forwardable'
+    extend Forwardable
+
+    def_delegator :@text, :empty?
+
+    def initialize(text)
+      @text = text.strip
+    end
+
+    def shouting?
+      @text =~ /[a-z]/i && @text == @text.upcase
+    end
+
+    def question?
+      @text.end_with?('?')
+    end
+  end
+
+  def self.hey(remark_text)
+    remark = Remark.new(remark_text)
 
     if remark.empty?
       'Fine. Be that way!'
-    elsif remark =~ /[a-z]/i && remark == remark.upcase
+    elsif remark.shouting?
       'Whoa, chill out!'
-    elsif remark.end_with?('?')
+    elsif remark.question?
       'Sure.'
     else
       'Whatever.'
