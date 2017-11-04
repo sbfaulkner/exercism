@@ -4,9 +4,7 @@ class Phrase
   end
 
   def word_count
-    @phrase.downcase.scan(/\b[\w']+\b/).each_with_object(Hash.new(0)) do |word, words|
-      words[word] += 1
-    end
+    @phrase.downcase.scan(/\b[\w']+\b/).group_by(&:to_s).transform_values(&:count)
   end
 end
 
