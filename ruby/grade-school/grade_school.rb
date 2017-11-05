@@ -4,11 +4,11 @@ class School
   end
 
   def add(name, grade)
-    @grades[grade] << name
+    @grades[grade].insert(@grades[grade].bsearch_index { |n| n >= name } || -1, name)
   end
 
   def students(grade)
-    @grades[grade].sort
+    @grades[grade]
   end
 
   def students_by_grade
