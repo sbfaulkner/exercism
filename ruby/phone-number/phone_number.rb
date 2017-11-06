@@ -1,8 +1,8 @@
 module PhoneNumber
+  PHONE_NUMBER = /\A(?:\+?1 ?)?(?:\(([2-9][0-9]{2})\)|([2-9][0-9]{2}))[ .]?([2-9][0-9]{2})(?:[-.]| *)([0-9]{4}) *\z/
+
   def self.clean(number)
-    clean = number.gsub(/[^0-9]/, '').sub(/\A1/, '')
-    return if clean.length != 10 || clean[3] < '2'
-    clean
+    PHONE_NUMBER.match(number)&.captures&.join
   end
 end
 
