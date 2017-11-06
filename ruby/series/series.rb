@@ -1,10 +1,10 @@
 class Series
   def initialize(digits)
-    @digits = digits
+    @digits = digits.chars
   end
 
   def slices(length)
     raise ArgumentError if length > @digits.length
-    (0..(@digits.length - length)).map { |i| @digits[i,length] }
+    @digits.each_cons(length).map(&:join)
   end
 end
