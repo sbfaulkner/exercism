@@ -1,18 +1,14 @@
 module Strain
   def keep
-    kept = []
-    each do |item|
+    each_with_object([]) do |item, kept|
       kept << item if yield(item)
     end
-    kept
   end
 
   def discard
-    kept = []
-    each do |item|
+    each_with_object([]) do |item, kept|
       kept << item unless yield(item)
     end
-    kept
   end
 end
 
