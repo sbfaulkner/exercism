@@ -13,11 +13,14 @@ class BeerSong
   private
 
   def bottles(count)
-    pluralize(count.zero? ? 'no more' : count, 'bottle')
-  end
-
-  def pluralize(count, object)
-    "#{count} #{object}#{'s' if count != 1}"
+    case count
+    when 0
+      'no more bottles'
+    when 1
+      '1 bottle'
+    else
+      "#{count} bottles"
+    end
   end
 
   def take_one_from(number)
