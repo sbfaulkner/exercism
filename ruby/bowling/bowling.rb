@@ -12,10 +12,6 @@ class Game
       @rolls = []
     end
 
-    def inspect
-      "<Frame @rolls=#{@rolls.inspect}>"
-    end
-
     def <<(pins)
       @rolls << pins
     end
