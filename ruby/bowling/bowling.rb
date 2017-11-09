@@ -1,32 +1,63 @@
+require 'forwardable'
+
 class Game
   BowlingError = Class.new(ArgumentError)
 
+  class Frame
+    extend Forwardable
+
+    def_delegators :@rolls, :sum, :size
+
+    def initialize
+      @rolls = []
+    end
+
+    def inspect
+      "<Frame @rolls=#{@rolls.inspect}>"
+    end
+
+    def <<(pins)
+      @rolls << pins
+    end
+
+    def complete?
+      strike? || @rolls[1]
+    end
+
+    def strike?
+      @rolls[0] == 10
+    end
+
+    def spare?
+      @rolls[0, 2].sum == 10 && !strike?
+    end
+  end
+
   def initialize
-    @rolls = []
+    @frames = [Frame.new]
   end
 
   def roll(pins)
     raise BowlingError unless pins.between?(0, 10)
-    @rolls << pins
+
+    @frames[-1] << pins
+    @frames[-2] << pins if @frames[-2] && (@frames[-2].strike? && @frames[-1].size < 3 || @frames[-2].spare? && @frames[-1].size == 1)
+    @frames[-3] << pins if @frames[-3] && @frames[-3].strike? && @frames[-1].size == 1
+
+    next_frame if @frames[-1].complete? && !complete?
   end
 
   def score
-    total = 0
-    r = 0
+    @frames.sum(&:sum)
+  end
 
-    10.times do
-      if @rolls[r] == 10
-        total += @rolls[r, 3].sum
-        r += 1
-      elsif @rolls[r, 2].sum == 10
-        total += @rolls[r, 3].sum
-        r += 2
-      else
-        total += @rolls[r, 2].sum
-        r += 2
-      end
-    end
+  private
 
-    total
+  def complete?
+    @frames.size == 10
+  end
+
+  def next_frame
+    @frames << Frame.new
   end
 end
