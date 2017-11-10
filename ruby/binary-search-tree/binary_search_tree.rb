@@ -1,24 +1,22 @@
 class Bst
   attr_reader :data, :left, :right
 
+  def self.insert(data, bst)
+    bst ? bst.insert(data) : new(data)
+  end
+
   def initialize(data)
     @data = data
   end
 
   def insert(data)
     if data <= @data
-      if @left
-        @left.insert(data)
-      else
-        @left = self.class.new(data)
-      end
+      @left = self.class.insert(data, @left)
     else
-      if @right
-        @right.insert(data)
-      else
-        @right = self.class.new(data)
-      end
+      @right = self.class.insert(data, @right)
     end
+
+    self
   end
 
   def each(&block)
@@ -27,6 +25,8 @@ class Bst
     @left&.each(&block)
     yield data
     @right&.each(&block)
+
+    self
   end
 end
 
