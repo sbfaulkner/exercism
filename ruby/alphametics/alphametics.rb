@@ -11,7 +11,9 @@ module Alphametics
       left, right = puzzle.split(EQUALS)
       left = left.split(PLUS)
 
-      DIGITS.permutation(letters.size).map(&:join).each do |digits|
+      DIGITS.permutation(letters.size).each do |digits|
+        digits = digits.join
+
         actual = left.sum { |l| convert_letters_to_integer(l, letters, digits) || break }
         next unless actual
 
