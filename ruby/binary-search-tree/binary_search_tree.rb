@@ -1,19 +1,17 @@
 class Bst
   attr_reader :data, :left, :right
 
-  def self.insert(data, bst)
-    bst ? bst.insert(data) : new(data)
-  end
-
   def initialize(data)
     @data = data
   end
 
   def insert(data)
+    insert_or_new = lambda { |bst| bst ? bst.insert(data) : self.class.new(data) }
+
     if data <= @data
-      @left = self.class.insert(data, @left)
+      @left = insert_or_new.call(@left)
     else
-      @right = self.class.insert(data, @right)
+      @right = insert_or_new.call(@right)
     end
 
     self
