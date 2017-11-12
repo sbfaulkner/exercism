@@ -20,6 +20,8 @@ class Clock
 
   def ==(clock)
     clock.hour == hour && clock.minute == minute
+  rescue
+    false
   end
 end
 
