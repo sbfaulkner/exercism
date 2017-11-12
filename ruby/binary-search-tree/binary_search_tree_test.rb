@@ -77,6 +77,14 @@ class BstTest < Minitest::Test
     assert_equal [1, 2, 3, 4, 5, 6, 7], record_all_data(four)
   end
 
+  def test_inserting_into_subtree
+    four = Bst.new 4
+    four.insert 3
+    assert_raises RuntimeError do
+      four.left.insert(6)
+    end
+  end
+
   def test_each_returns_enumerator_if_no_block
     tree = Bst.new 4
     [2, 1, 3, 6, 7, 5].each { |x| tree.insert x }

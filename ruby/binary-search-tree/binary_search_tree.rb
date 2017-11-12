@@ -1,5 +1,22 @@
+module FrozenReader
+  private
+
+  def frozen_reader(*attrs)
+    attrs.each do |attr|
+      class_eval <<-SUBTREE_READER
+        def #{attr}
+          @#{attr}.dup.freeze
+        end
+      SUBTREE_READER
+    end
+  end
+end
+
 class Bst
-  attr_reader :data, :left, :right
+  extend FrozenReader
+
+  attr_reader :data
+  frozen_reader :left, :right
 
   def initialize(data)
     @data = data
