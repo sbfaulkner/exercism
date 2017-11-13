@@ -1,22 +1,19 @@
-require 'forwardable'
-
 class Nucleotide
-  extend Forwardable
-
-  NUCLEOTIDES = %w(A C G T)
-
   def self.from_dna(strand)
     new(strand.chars)
   end
 
-  def_delegator :@nucleotides, :count
+  NUCLEOTIDES = { 'A' => 0, 'C' => 0, 'G' => 0, 'T' => 0 }.freeze
+
+  attr_reader :histogram
 
   def initialize(nucleotides)
-    raise ArgumentError if (nucleotides - NUCLEOTIDES).any?
-    @nucleotides = nucleotides
+    @histogram = nucleotides.each_with_object(NUCLEOTIDES.dup) do |nucleotide, histogram|
+      histogram[nucleotide] = histogram.fetch(nucleotide) { raise ArgumentError } + 1
+    end
   end
 
-  def histogram
-    NUCLEOTIDES.each_with_object({}) { |n, h| h[n] = count(n) }
+  def count(nucleotide)
+    histogram[nucleotide]
   end
 end
