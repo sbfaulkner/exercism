@@ -5,50 +5,32 @@ module RailFenceCipher
     def encode(decoded, count)
       return decoded if count == 1
 
-      rails = Array.new(count) { '' }
-      direction = 1
-      rail = 1
-
-      decoded.chars.each do |char|
-        rails[rail - 1] << char
-        rail += direction
-        direction *= -1 if rail == 1 || rail == count
-      end
-
+      rails = make_rails(decoded.length, count) { |i| decoded[i] }
       rails.join
     end
 
     def decode(encoded, count)
       return encoded if count == 1
 
-      lengths = Array.new(count) { 0 }
+      rails = make_rails(encoded.length, count) { |i| i }
+      rails.reduce(&:concat).zip(encoded.chars).sort.map(&:last).join
+    end
+
+    private
+
+    def make_rails(length, count)
+      rails = Array.new(count) { [] }
+
       direction = 1
       rail = 1
 
-      encoded.size.times do
-        lengths[rail - 1] += 1
+      length.times do |i|
+        rails[rail - 1] << yield(i)
         rail += direction
         direction *= -1 if rail == 1 || rail == count
       end
 
-      offset = 0
-      rails = lengths.map do |length|
-        part = encoded[offset, length].chars
-        offset += length
-        part
-      end
-
-      direction = 1
-      rail = 1
-      decoded = []
-
-      encoded.size.times do
-        decoded << rails[rail - 1].shift
-        rail += direction
-        direction *= -1 if rail == 1 || rail == count
-      end
-
-      decoded.join
+      rails
     end
   end
 end
