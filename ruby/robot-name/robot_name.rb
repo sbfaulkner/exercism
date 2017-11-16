@@ -1,14 +1,13 @@
 class Robot
   class NameGenerator
-    ALL_NAMES = 'AA000'..'ZZ999'
+    ALL_NAMES = ('AA000'..'ZZ999').to_a
 
     def initialize
-      @prng = Random.new
-      @names = ALL_NAMES.to_a
+      @names = ALL_NAMES.shuffle(random: Random.new)
     end
 
     def next
-      @names.delete_at(@prng.rand(@names.size))
+      @names.shift
     end
   end
 
