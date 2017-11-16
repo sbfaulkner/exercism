@@ -1,22 +1,26 @@
 class Robot
-  class << self
+  class NameGenerator
     ALL_NAMES = 'AA000'..'ZZ999'
 
-    def forget
-      @names = generate_names
+    def initialize
+      @prng = Random.new
+      @names = ALL_NAMES.to_a
     end
 
-    def next_name
-      @names ||= generate_names
-      @names.delete_at(rand(@names.size))
-    end
-
-    private
-
-    def generate_names
-      ALL_NAMES.to_a
+    def next
+      @names.delete_at(@prng.rand(@names.size))
     end
   end
+
+  class << self
+    attr_reader :name_generator
+
+    def forget
+      @name_generator = NameGenerator.new
+    end
+  end
+
+  forget
 
   def initialize
     reset
@@ -25,8 +29,7 @@ class Robot
   attr_reader :name
 
   def reset
-    srand
-    @name = self.class.next_name
+    @name = self.class.name_generator.next
   end
 end
 
