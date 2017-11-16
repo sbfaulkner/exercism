@@ -1,21 +1,11 @@
 class Robot
-  class NameGenerator
-    ALL_NAMES = ('AA000'..'ZZ999').to_a
-
-    def initialize
-      @names = ALL_NAMES.shuffle(random: Random.new)
-    end
-
-    def next
-      @names.shift
-    end
-  end
+  ALL_NAMES = ('AA000'..'ZZ999').to_a
 
   class << self
-    attr_reader :name_generator
+    attr_reader :names
 
     def forget
-      @name_generator = NameGenerator.new
+      @names = ALL_NAMES.shuffle(random: Random.new)
     end
   end
 
@@ -28,7 +18,7 @@ class Robot
   attr_reader :name
 
   def reset
-    @name = self.class.name_generator.next
+    @name = self.class.names.shift
   end
 end
 
