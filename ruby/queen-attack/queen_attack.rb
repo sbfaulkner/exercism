@@ -1,7 +1,10 @@
 class Queens
-  class Queen
-    BOARD_SIZE = 8
+  BOARD_SIZE = 8
 
+  WHITE_POSITION = [0, 3]
+  BLACK_POSITION = [7, 3]
+
+  class Queen
     attr_reader :row, :column
 
     def initialize(row, column)
@@ -25,7 +28,7 @@ class Queens
     end
   end
 
-  def initialize(white: [0, 3], black: [7, 3])
+  def initialize(white: WHITE_POSITION, black: BLACK_POSITION)
     @white = Queen.new(*white)
     @black = Queen.new(*black)
   end
