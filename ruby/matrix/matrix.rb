@@ -1,8 +1,13 @@
 class Matrix
-  attr_reader :rows, :columns
-
   def initialize(text)
-    @rows = text.lines.map { |row| row.split.map(&:to_i) }.freeze
-    @columns = @rows.transpose.freeze
+    @matrix = text.each_line.map { |row| row.split.map(&:to_i) }
+  end
+
+  def rows
+    @matrix.dup
+  end
+
+  def columns
+    @matrix.transpose
   end
 end
