@@ -1,53 +1,32 @@
 # frozen_string_literal: true
 
 module House
-  FIRST_LINE = 'This is the %<character>s'
-  OTHER_LINE = 'that %<action>s the %<character>s'
-
-  CHARACTERS = [
-    'house that Jack built.',
-    'malt',
-    'rat',
-    'cat',
-    'dog',
-    'cow with the crumpled horn',
-    'maiden all forlorn',
-    'man all tattered and torn',
-    'priest all shaven and shorn',
-    'rooster that crowed in the morn',
-    'farmer sowing his corn',
-    'horse and the hound and the horn',
-  ]
-
-  ACTIONS = [
-    'lay in',
-    'ate',
-    'killed',
-    'worried',
-    'tossed',
-    'milked',
-    'kissed',
-    'married',
-    'woke',
-    'kept',
-    'belonged to',
+  LEAD = 'This is '
+  PHRASES = [
+    "#{LEAD}the house that Jack built.\n",
+    "the malt\nthat lay in ",
+    "the rat\nthat ate ",
+    "the cat\nthat killed ",
+    "the dog\nthat worried ",
+    "the cow with the crumpled horn\nthat tossed ",
+    "the maiden all forlorn\nthat milked ",
+    "the man all tattered and torn\nthat kissed ",
+    "the priest all shaven and shorn\nthat married ",
+    "the rooster that crowed in the morn\nthat woke ",
+    "the farmer sowing his corn\nthat kept ",
+    "the horse and the hound and the horn\nthat belonged to ",
   ]
 
   def self.recite
-    Array.new(CHARACTERS.size) { |v| verse(v + 1) }.join("\n")
+    Array.new(PHRASES.size) { |v| verse(v + 1) }.join("\n")
   end
 
   def self.verse(number)
-    phrases = []
+    phrase(number - 1)
+  end
 
-    phrases << format(FIRST_LINE, character: CHARACTERS[number - 1])
-
-    (number - 2).downto(0) do |i|
-      phrases << format(OTHER_LINE, action: ACTIONS[i], character: CHARACTERS[i])
-    end
-
-    phrases << ''
-
-    phrases.join("\n")
+  def self.phrase(index)
+    return PHRASES[index].dup if index.zero?
+    phrase(index - 1).insert(LEAD.length, PHRASES[index])
   end
 end
