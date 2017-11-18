@@ -16,6 +16,12 @@ class SecretHandshake
 
   def commands
     handshake = COMMANDS.reject.with_index { |_, i| (@number & 2**i).zero? }
-    (@number & REVERSE).zero? ? handshake : handshake.reverse
+    reversed? ? handshake.reverse : handshake
+  end
+
+  private
+
+  def reversed?
+    !(@number & REVERSE).zero?
   end
 end
