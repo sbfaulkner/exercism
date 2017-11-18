@@ -89,6 +89,16 @@ class TriangleTest < Minitest::Test
     assert triangle.scalene?, "Expected 'true', triangle [0.5, 0.4, 0.6] is scalene."
   end
 
+  def test_triangle_is_not_degenerate_if_all_sides_are_less_than_the_sum_of_the_other_two
+    triangle = Triangle.new([3, 4, 5])
+    refute triangle.degenerate?, "Expected 'false', triangle [3, 4, 5] is not degenerate."
+  end
+
+  def test_triangle_is_degenerate_if_one_side_is_equal_to_the_sum_of_the_other_two
+    triangle = Triangle.new([3, 4, 7])
+    assert triangle.degenerate?, "Expected 'true', triangle [3, 4, 7] is degenerate."
+  end
+
   # Problems in exercism evolve over time, as we find better ways to ask
   # questions.
   # The version number refers to the version of the problem you solved,

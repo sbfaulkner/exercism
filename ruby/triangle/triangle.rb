@@ -15,6 +15,10 @@ class Triangle
     valid? && @sides.uniq.size == 3
   end
 
+  def degenerate?
+    valid? && @sides.any? { |side| side == @sides.sum - side }
+  end
+
   private
 
   def valid?
@@ -22,7 +26,7 @@ class Triangle
   end
 
   def triangle_inequality?(side)
-    side < @sides.sum - side
+    side <= @sides.sum - side
   end
 end
 
