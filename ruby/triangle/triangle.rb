@@ -18,11 +18,11 @@ class Triangle
   private
 
   def valid?
-    @sides.map.with_index { |side, index| side.positive? && triangle_inequality?(index) }.all?
+    @sides.all? { |side| side.positive? && triangle_inequality?(side) }
   end
 
-  def triangle_inequality?(index)
-    @sides[index] < @sides.map.with_index { |s, i| i == index ? 0 : s }.sum
+  def triangle_inequality?(side)
+    side < @sides.sum - side
   end
 end
 
