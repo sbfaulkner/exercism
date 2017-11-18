@@ -1,4 +1,4 @@
-# frozen_string_literal: false
+# frozen_string_literal: true
 
 module FoodChain
   OLD_LADY = 'I know an old lady who swallowed a %{animal}.'
