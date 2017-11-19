@@ -6,7 +6,7 @@ module Luhn
 
     return false if text !~ /\A[0-9]{2,}\z/
 
-    digits = text.reverse.chars.map.with_index do |ch, i|
+    checksum = text.reverse.each_char.with_index.sum do |ch, i|
       digit = ch.to_i
 
       if i.odd?
@@ -17,7 +17,7 @@ module Luhn
       digit
     end
 
-    (digits.sum % 10).zero?
+    (checksum % 10).zero?
   end
 end
 
