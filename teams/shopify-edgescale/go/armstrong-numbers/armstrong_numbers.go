@@ -1,11 +1,10 @@
 package armstrong
 
-func digits(num int) []int {
-	d := []int{}
+func digits(num int) int {
+	d := 0
 
-	for num > 0 {
-		d = append([]int{num % 10}, d...)
-		num /= 10
+	for n := num; n > 0; n /= 10 {
+		d++
 	}
 
 	return d
@@ -20,13 +19,12 @@ func pow(num int, power int) int {
 
 // IsNumber determines whether a number is an Armstrong number
 func IsNumber(num int) bool {
-	d := digits(num)
-	l := len(d)
+	l := digits(num)
 
 	s := 0
 
-	for _, dd := range d {
-		s += pow(dd, l)
+	for n := num; n > 0; n /= 10 {
+		s += pow(n%10, l)
 	}
 
 	return s == num
