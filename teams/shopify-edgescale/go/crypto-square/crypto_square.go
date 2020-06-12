@@ -7,47 +7,58 @@ import (
 )
 
 func normalize(r rune) rune {
-	if unicode.IsUpper(r) {
-		return unicode.ToLower(r)
-	}
-
 	if unicode.IsLower(r) || unicode.IsDigit(r) {
 		return r
 	}
 
+	if unicode.IsUpper(r) {
+		return unicode.ToLower(r)
+	}
+
 	return -1
+}
+
+func dimensions(s string) (int, int) {
+	r := 0
+	c := 0
+
+	for {
+		if c*r >= len(s) {
+			break
+		}
+
+		c++
+
+		if c*r >= len(s) {
+			break
+		}
+
+		r++
+	}
+
+	return r, c
 }
 
 // Encode encrypts a secret message using square code
 func Encode(input string) string {
 	normalized := strings.Map(normalize, input)
 
-	length := len(normalized)
+	rows, columns := dimensions(normalized)
 
-	rows := 0
-	columns := 0
+	square := make([][]rune, columns)
 
-	for {
-		if columns*rows >= length {
-			break
-		}
-
-		columns++
-
-		if columns*rows >= length {
-			break
-		}
-
-		rows++
+	for c := range square {
+		square[c] = make([]rune, rows)
 	}
-
-	square := make([]string, columns)
 
 	for i, r := range []rune(fmt.Sprintf("%-*s", rows*columns, normalized)) {
-		cc := i % columns
-
-		square[cc] += string(r)
+		square[i%columns][i/columns] = r
 	}
 
-	return strings.Join(square, " ")
+	s := make([]string, 0, columns)
+	for _, c := range square {
+		s = append(s, string(c))
+	}
+
+	return strings.Join(s, " ")
 }
