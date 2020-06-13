@@ -1,22 +1,27 @@
 package flatten
 
+func flatEach(input interface{}, f func(interface{})) {
+	if input == nil {
+		return
+	}
+
+	ai, ok := input.([]interface{})
+	if ok {
+		for _, i := range ai {
+			flatEach(i, f)
+		}
+	} else {
+		f(input)
+	}
+}
+
 // Flatten returns a single flattened list with all values except nil/null
 func Flatten(input interface{}) []interface{} {
-	ai, ok := input.([]interface{})
+	count := 0
+	flatEach(input, func(interface{}) { count++ })
 
-	if !ok {
-		return []interface{}{input}
-	}
-
-	out := make([]interface{}, 0, len(ai))
-
-	for _, i := range ai {
-		if i == nil {
-			continue
-		}
-
-		out = append(out, Flatten(i)...)
-	}
+	out := make([]interface{}, 0, count)
+	flatEach(input, func(i interface{}) { out = append(out, i) })
 
 	return out
 }
