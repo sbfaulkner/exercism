@@ -1,21 +1,23 @@
 package isogram
 
-import "strings"
-
-const ignored = "- "
+import (
+	"unicode"
+)
 
 func ignoredRune(r rune) bool {
-	return strings.ContainsRune(ignored, r)
+	return !unicode.IsLetter(r)
 }
 
 // IsIsogram determines if a word or phrase is an isogram
 func IsIsogram(text string) bool {
-	letters := map[rune]bool{}
+	letters := make(map[rune]bool, len(text))
 
-	for _, r := range strings.ToLower(text) {
+	for _, r := range text {
 		if ignoredRune(r) {
 			continue
 		}
+
+		r = unicode.ToLower(r)
 
 		if letters[r] {
 			return false
