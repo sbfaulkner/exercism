@@ -14,20 +14,19 @@ var plantNames = map[rune]string{
 }
 
 // Garden is an instance of a kindergarten class's garden
-type Garden map[string][]string
+type Garden struct {
+	cups     [][]rune
+	children []string
+}
 
-func sortChildren(children []string) ([]string, error) {
+func parseChildren(children []string) ([]string, error) {
 	unique := map[string]bool{}
 
 	for _, c := range children {
-		if unique[c] {
-			return nil, errors.New("duplicate child name")
+		if _, ok := unique[c]; ok {
+			return nil, errors.New("duplicate name")
 		}
 		unique[c] = true
-	}
-
-	if sort.StringsAreSorted(children) {
-		return children, nil
 	}
 
 	sorted := make([]string, len(children))
@@ -37,34 +36,45 @@ func sortChildren(children []string) ([]string, error) {
 	return sorted, nil
 }
 
+func parseCups(diagram string) ([][]rune, error) {
+	rows := strings.Split(diagram, "\n")
+	if rows[0] != "" {
+		return nil, errors.New("wrong diagram format")
+	}
+
+	if len(rows[1]) != len(rows[2]) {
+		return nil, errors.New("mismatched rows")
+	}
+
+	if len(rows[1])%2 != 0 {
+		return nil, errors.New("odd number of cups")
+	}
+
+	for _, r := range rows[1:3] {
+		for _, c := range r {
+			if _, ok := plantNames[c]; !ok {
+				return nil, errors.New("invalid cup code")
+			}
+		}
+	}
+	return [][]rune{[]rune(rows[1]), []rune(rows[2])}, nil
+}
+
 // NewGarden instantiates a Garden given a diagram and a list of kindergarten children
 func NewGarden(diagram string, children []string) (*Garden, error) {
-	sortedChildren, err := sortChildren(children)
+	parsedCups, err := parseCups(diagram)
 	if err != nil {
 		return nil, err
 	}
 
-	rows := strings.Split(diagram, "\n")
-
-	if len(rows) != 3 || rows[0] != "" || len(rows[1]) != 2*len(sortedChildren) || len(rows[1]) != len(rows[2]) {
-		return nil, errors.New("wrong diagram format")
+	parsedChildren, err := parseChildren(children)
+	if err != nil {
+		return nil, err
 	}
 
-	cups := rows[1:]
-
-	g := Garden{}
-
-	for i, c := range sortedChildren {
-		low := i * 2
-		high := low + 2
-		g[c] = make([]string, 0, 4)
-		for _, p := range cups[0][low:high] + cups[1][low:high] {
-			name, ok := plantNames[p]
-			if !ok {
-				return nil, errors.New("invalid cup code")
-			}
-			g[c] = append(g[c], name)
-		}
+	g := Garden{
+		cups:     parsedCups,
+		children: parsedChildren,
 	}
 
 	return &g, nil
@@ -72,6 +82,18 @@ func NewGarden(diagram string, children []string) (*Garden, error) {
 
 // Plants returns the list of plants for a given child
 func (g *Garden) Plants(child string) ([]string, bool) {
-	p, ok := (*g)[child]
-	return p, ok
+	i := sort.SearchStrings(g.children, child)
+
+	if i == len(g.children) {
+		return nil, false
+	}
+
+	plants := []string{
+		plantNames[g.cups[0][i*2]],
+		plantNames[g.cups[0][i*2+1]],
+		plantNames[g.cups[1][i*2]],
+		plantNames[g.cups[1][i*2+1]],
+	}
+
+	return plants, true
 }
