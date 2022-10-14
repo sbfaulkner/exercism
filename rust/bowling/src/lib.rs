@@ -13,11 +13,15 @@ impl Frame {
     fn score(&self) -> u16 {
         self.rolls.iter().sum()
     }
+
+    fn len(&self) -> usize {
+        self.rolls.len()
+    }
 }
 
 pub struct BowlingGame {
     frames: Vec<Frame>,
-    frame: u16,
+    frame: usize,
 }
 
 impl BowlingGame {
@@ -29,31 +33,29 @@ impl BowlingGame {
     }
 
     pub fn roll(&mut self, pins: u16) -> Result<(), Error> {
-        println!("Roll {} pins in frame {}", pins, self.frame);
-
         if self.is_complete() {
-            println!("Game is complete");
             return Err(Error::GameComplete);
         }
 
-        let frame = &mut self.frames[self.frame as usize];
+        let frame = &mut self.frames[self.frame];
 
-        let remaining = match frame.rolls.len() {
-            2 if self.frame == 9 && frame.rolls[0] == 10 && frame.rolls[1] != 10 => 10 - frame.rolls[1],
-            2 if self.frame == 9 => 10,
-            1 if frame.rolls[0] == 10 => 10,
-            _ => 10 - frame.score(),
+        let pins_left = if self.frame < 9 || frame.len() == 0 || frame.len() == 1 && frame.score() < 10 {
+            10 - frame.score()
+        } else if frame.len() == 1 || frame.len() == 2 && frame.score() < 20 {
+            20 - frame.score()
+        } else {
+            30 - frame.score()
         };
 
-        if pins > remaining {
-            println!("Not enough pins left");
+        if pins > pins_left {
             return Err(Error::NotEnoughPinsLeft);
         }
 
         frame.rolls.push(pins);
 
-        if self.frame == 9 && (frame.rolls.len() == 3 || frame.rolls.len() == 2 && frame.score() < 10)
-        || self.frame < 9 && (frame.rolls.len() == 2 || frame.score() == 10) {
+        if self.frame < 9 && (frame.len() == 2 || frame.score() == 10)
+        || frame.len() == 2 && frame.score() < 10
+        || frame.len() == 3 {
             self.frame += 1;
         }
 
@@ -61,31 +63,21 @@ impl BowlingGame {
     }
 
     pub fn score(&self) -> Option<u16> {
-        println!("Score {:?}", self.frames);
-
         match self.is_complete() {
             true => Some(
                 self.frames.iter().enumerate().fold(0, |acc, (i, frame)| {
                     let mut score = frame.score();
 
-                    // println!("Frame {}: {:?} (score={})", i, frame, score);
-
-                    // if frame.rolls.len() == 1 {
-                    //     score += self.frames[i + 1].rolls[0];
-                    //     score += self.frames[i + 1].rolls[1];
-                    // } else
-                    if i < 9 && frame.score() == 10 && frame.rolls.len() < 3 {
+                    if i < 9 && frame.score() == 10 {
                         score += self.frames[i + 1].rolls[0];
-                        if frame.rolls.len() < 2 {
-                            if self.frames[i+1].rolls.len() > 1 {
-                                score += self.frames[i + 1].rolls[1];
-                            } else {
+                        if frame.len() == 1 {
+                            if self.frames[i + 1].len() == 1 {
                                 score += self.frames[i + 2].rolls[0];
+                            } else {
+                                score += self.frames[i + 1].rolls[1];
                             }
                         }
                     }
-
-                    // println!("Frame {}: {:?} (score={})", i, frame, score);
 
                     acc + score
                 })
@@ -95,7 +87,6 @@ impl BowlingGame {
     }
 
     fn is_complete(&self) -> bool {
-        println!("Complete (frame={})", self.frame);
         self.frame == 10
     }
 }
