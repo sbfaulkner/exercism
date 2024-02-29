@@ -15,20 +15,14 @@
     (robot {:x (+ x (dx bearing)), :y (+ y (dy bearing))} bearing))
 
 (def left {:north :west, :south :east, :east :north, :west :south})
-
-(defn- turn-left
-  "Turn robot to the left."
-  [{bearing :bearing coordinates :coordinates}]
-  (robot coordinates (left bearing)))
-
 (def right {:north :east, :south :west, :east :south, :west :north})
 
-(defn- turn-right
-  "Turn robot to the right."
-  [{bearing :bearing coordinates :coordinates}]
-  (robot coordinates (right bearing)))
+(defn- turn
+  "Turn robot left or right."
+  [direction {bearing :bearing coordinates :coordinates}]
+  (robot coordinates (direction bearing)))
 
-(def instruction {\A advance, \L turn-left, \R turn-right})
+(def instruction {\A advance, \L (partial turn left), \R (partial turn right)})
 
 (defn- execute
   "Execute a single instruction."
