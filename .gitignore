@@ -1,2 +1,4 @@
 .vscode
 debug.test
+.DS_Store
+.exercism
