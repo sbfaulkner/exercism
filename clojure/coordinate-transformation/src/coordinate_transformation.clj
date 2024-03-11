@@ -23,8 +23,8 @@
    If the arguments are the same as the last call,
    the memoized result is returned."
   [f]
-  (let [memo (atom {:x nil :y nil :result nil})]
+  (let [memo (atom {:args nil :result nil})]
     (fn [x y]
-      (if (and (= x (@memo :x)) (= y (@memo :y)))
+      (if (= [x y] (@memo :args))
         (@memo :result)
-        (let [result (f x y)] (swap! memo assoc :x x :y y :result result) result)))))
+        (let [result (f x y)] (swap! memo assoc :args [x y] :result result) result)))))
